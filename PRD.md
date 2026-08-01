@@ -10,6 +10,7 @@
 
 Related documents:
 
+- [한국어 PRD](PRD_KO.md)
 - [AGENTS.md](AGENTS.md) — product and engineering principles
 - [WORK_ALLOCATION.md](WORK_ALLOCATION.md) — team ownership and delivery schedule
 - [Official hackathon rules](https://yonsei-yai-hackathon.netlify.app/#rules)

@@ -7,6 +7,8 @@
 
 This is the execution plan for the remaining hackathon window. The official hackathon rules take precedence, followed by [AGENTS.md](AGENTS.md), followed by this allocation document.
 
+Standalone Korean version: [WORK_ALLOCATION_KO.md](WORK_ALLOCATION_KO.md)
+
 Official references:
 
 - [Hackathon overview and presentation format](https://yonsei-yai-hackathon.netlify.app/)
