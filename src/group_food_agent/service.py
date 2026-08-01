@@ -77,6 +77,8 @@ class PlanningService:
         restaurant_source: RestaurantSourceV1 | None = None,
         load_default_source: bool = True,
         trace_writer: JsonlTraceWriter | None = None,
+        initial_existing_food_credits: dict[str, int] | None = None,
+        initial_demand_multipliers: dict[str, int] | None = None,
     ) -> None:
         self.clock = clock
         self.artifacts = ArtifactStore(clock)
@@ -90,6 +92,8 @@ class PlanningService:
         self.trace_writer = trace_writer
         self._event_sequence = 0
         self._last_failed_call_ids: dict[tuple[str, str], str] = {}
+        self._initial_existing_food_credits = initial_existing_food_credits or {}
+        self._initial_demand_multipliers = initial_demand_multipliers or {}
         if self.restaurant_source is not None:
             for restaurant in self.restaurant_source.restaurants:
                 for item in restaurant.menu_items:
@@ -101,7 +105,13 @@ class PlanningService:
         self.trace_writer = trace_writer
 
     def create_case(self, job: PlanningJobV2) -> None:
-        self.cases.create(job)
+        state = self.cases.create(job)
+        state.existing_food_credit_milli = self._initial_existing_food_credits.get(
+            job.intake.case_id, 0
+        )
+        state.demand_multiplier_basis_points = self._initial_demand_multipliers.get(
+            job.intake.case_id, 10_000
+        )
 
     def planner_view(self, case_id: str):
         from .planner_contracts import PlannerViewV2
@@ -254,10 +264,35 @@ class PlanningService:
         )
 
     def calculate_serving_requirement(self, case_id: str, serving_input_id: str) -> ArtifactResult:
+        state = self.cases.get(case_id)
+
         def operation() -> object:
             self.artifacts.assert_same_revision(serving_input_id)
             serving_input = self.artifacts.get(serving_input_id, ServingCalculationInputV1)
-            return calculate_serving_requirement(serving_input)  # type: ignore[arg-type]
+            requirement = calculate_serving_requirement(serving_input)  # type: ignore[arg-type]
+            credit = state.existing_food_credit_milli
+            if credit <= 0:
+                return requirement
+            targets = [
+                target.model_copy(
+                    update={
+                        "target_servings_milli": max(
+                            requirement.protected_demand_milli,
+                            target.target_servings_milli - credit,
+                        )
+                    }
+                )
+                for target in requirement.strategy_targets
+            ]
+            return requirement.model_copy(
+                update={
+                    "strategy_targets": targets,
+                    "warnings": [
+                        *requirement.warnings,
+                        f"existing_food_credit_milli={credit}; protected demand was not credited",
+                    ],
+                }
+            )
 
         return self._run_stage(
             case_id,
@@ -267,7 +302,8 @@ class PlanningService:
             operation,
             lambda value: (
                 f"calculated {value.equivalent_group_servings_milli / 1000:.3f} equivalent servings "  # type: ignore[attr-defined]
-                f"for {value.attendance_count} attendees"  # type: ignore[attr-defined]
+                f"for {value.attendance_count} attendees; "  # type: ignore[attr-defined]
+                f"existing-food credit={state.existing_food_credit_milli / 1000:.3f} servings"
             ),
             input_ids=[serving_input_id],
         )

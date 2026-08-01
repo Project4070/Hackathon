@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "TeamHistoryContextV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_name": {
+          "const": "team_history_context",
+          "default": "team_history_context",
+          "title": "Schema Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "team_id": {
+          "title": "Team Id",
+          "type": "string"
+        },
+        "data_mode": {
+          "const": "seeded_demo_history",
+          "default": "seeded_demo_history",
+          "title": "Data Mode",
+          "type": "string"
+        },
+        "observation_count": {
+          "maximum": 1000,
+          "minimum": 0,
+          "title": "Observation Count",
+          "type": "integer"
+        },
+        "demand_multiplier_basis_points": {
+          "maximum": 12500,
+          "minimum": 7500,
+          "title": "Demand Multiplier Basis Points",
+          "type": "integer"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "team_id",
+        "observation_count",
+        "demand_multiplier_basis_points",
+        "summary"
+      ],
+      "title": "TeamHistoryContextV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "timezone_offset_minutes": {
+      "maximum": 840,
+      "minimum": -840,
+      "title": "Timezone Offset Minutes",
+      "type": "integer"
+    },
+    "latitude": {
+      "anyOf": [
+        {
+          "maximum": 90,
+          "minimum": -90,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latitude"
+    },
+    "longitude": {
+      "anyOf": [
+        {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Longitude"
+    },
+    "location_permission": {
+      "enum": [
+        "granted",
+        "denied",
+        "unavailable"
+      ],
+      "title": "Location Permission",
+      "type": "string"
+    },
+    "history": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TeamHistoryContextV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "captured_at",
+    "timezone_offset_minutes",
+    "location_permission"
+  ],
+  "title": "MultimodalContextV1",
+  "type": "object"
+}

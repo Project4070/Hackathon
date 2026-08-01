@@ -37,7 +37,7 @@ def test_ready_intake_is_frozen(canonical_candidate: MealRequestCandidateV2, can
 
 def test_schema_generation_uses_pydantic_source_of_truth(tmp_path: Path) -> None:
     paths = generate_schemas(tmp_path)
-    assert len(paths) == 24
+    assert len(paths) == 29
     filenames = {path.name for path in paths}
     assert {
         "planning_job_v2.schema.json",
@@ -49,6 +49,11 @@ def test_schema_generation_uses_pydantic_source_of_truth(tmp_path: Path) -> None
         "planner_agent_final_v1.schema.json",
         "presentation_tool_result_v1.schema.json",
         "planner_restaurant_v1.schema.json",
+        "multimodal_meal_request_candidate_v1.schema.json",
+        "scene_analysis_v1.schema.json",
+        "existing_food_credit_v1.schema.json",
+        "multimodal_context_v1.schema.json",
+        "team_history_context_v1.schema.json",
     } <= filenames
     candidate_schema = (tmp_path / "meal_request_candidate_v2.schema.json").read_text(encoding="utf-8")
     assert '"additionalProperties": false' in candidate_schema

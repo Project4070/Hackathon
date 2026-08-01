@@ -35,6 +35,13 @@ from .planner_models import (
 from .crawler import RawCrawlBatchV1
 from .semantic_agents import MenuSemanticCandidateV1
 from .naver_planner_adapter import PlannerRestaurantV1
+from .multimodal import (
+    ExistingFoodCreditV1,
+    MultimodalContextV1,
+    MultimodalMealRequestCandidateV1,
+    SceneAnalysisV1,
+    TeamHistoryContextV1,
+)
 
 
 SCHEMA_TYPES = {
@@ -61,6 +68,11 @@ SCHEMA_TYPES = {
     "planner_agent_final_v1.schema.json": PlannerAgentFinalV1,
     "presentation_tool_result_v1.schema.json": PresentationToolResultV1,
     "planner_restaurant_v1.schema.json": PlannerRestaurantV1,
+    "multimodal_meal_request_candidate_v1.schema.json": MultimodalMealRequestCandidateV1,
+    "scene_analysis_v1.schema.json": SceneAnalysisV1,
+    "existing_food_credit_v1.schema.json": ExistingFoodCreditV1,
+    "multimodal_context_v1.schema.json": MultimodalContextV1,
+    "team_history_context_v1.schema.json": TeamHistoryContextV1,
 }
 
 

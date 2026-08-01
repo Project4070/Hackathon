@@ -1,0 +1,309 @@
+{
+  "$defs": {
+    "MealType": {
+      "enum": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "late_night",
+        "snack",
+        "other"
+      ],
+      "title": "MealType",
+      "type": "string"
+    },
+    "ObservationEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "modality": {
+          "enum": [
+            "image",
+            "user_text",
+            "application_context"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "overridden",
+            "ambiguous",
+            "unusable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Text"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "modality",
+        "status",
+        "confidence"
+      ],
+      "title": "ObservationEvidenceV1",
+      "type": "object"
+    },
+    "ObservedFoodV1": {
+      "additionalProperties": false,
+      "properties": {
+        "observation_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "category_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Category Code",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "estimated_units_min": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Estimated Units Min",
+          "type": "number"
+        },
+        "estimated_units_max": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Estimated Units Max",
+          "type": "number"
+        },
+        "remaining_ratio_min": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Remaining Ratio Min",
+          "type": "number"
+        },
+        "remaining_ratio_max": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Remaining Ratio Max",
+          "type": "number"
+        },
+        "condition": {
+          "enum": [
+            "new",
+            "partially_eaten",
+            "mostly_eaten",
+            "empty",
+            "unknown"
+          ],
+          "title": "Condition",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/ObservationEvidenceV1"
+        }
+      },
+      "required": [
+        "observation_id",
+        "category_code",
+        "label",
+        "unit",
+        "estimated_units_min",
+        "estimated_units_max",
+        "remaining_ratio_min",
+        "remaining_ratio_max",
+        "condition",
+        "evidence"
+      ],
+      "title": "ObservedFoodV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "scene_analysis",
+      "default": "scene_analysis",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "image_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Image Id"
+    },
+    "image_provided": {
+      "title": "Image Provided",
+      "type": "boolean"
+    },
+    "visible_people": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Visible People"
+    },
+    "visible_people_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Visible People Confidence",
+      "type": "number"
+    },
+    "visible_people_evidence": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ObservationEvidenceV1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "additional_people": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Additional People",
+      "type": "integer"
+    },
+    "explicit_total_people": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Explicit Total People"
+    },
+    "existing_food": {
+      "items": {
+        "$ref": "#/$defs/ObservedFoodV1"
+      },
+      "maxItems": 20,
+      "title": "Existing Food",
+      "type": "array"
+    },
+    "meal_context": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MealType"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "meal_context_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Meal Context Confidence",
+      "type": "number"
+    },
+    "environment_label": {
+      "anyOf": [
+        {
+          "maxLength": 160,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Environment Label"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "image_id",
+    "image_provided",
+    "visible_people",
+    "visible_people_confidence",
+    "visible_people_evidence",
+    "additional_people",
+    "explicit_total_people",
+    "existing_food",
+    "meal_context",
+    "meal_context_confidence",
+    "environment_label",
+    "warnings"
+  ],
+  "title": "SceneAnalysisV1",
+  "type": "object"
+}

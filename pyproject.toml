@@ -10,8 +10,12 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "openai-agents==0.19.2",
+  "pillow>=11.0,<13",
   "pydantic>=2.12,<3",
   "python-dotenv>=1.0,<2",
+  "python-multipart>=0.0.20,<1",
+  "starlette>=0.47,<2",
+  "uvicorn>=0.35,<1",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +31,7 @@ group-food-agent = "group_food_agent.full_cli:main"
 group-food-schemas = "group_food_agent.schemas:main"
 group-food-trace = "group_food_agent.trace_cli:main"
 group-food-http = "group_food_agent.http_api:main"
+group-food-web = "group_food_agent.web_app:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/group_food_agent"]

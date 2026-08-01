@@ -12,6 +12,7 @@ from uuid import uuid4
 from .application import run_group_food_agent
 from .config import load_project_dotenv
 from .contracts import MealRequestCandidateV2
+from .run_payload import build_run_payload
 from .validation import ValidationContextV2
 
 
@@ -71,31 +72,7 @@ async def _run(args: argparse.Namespace) -> int:
             "[group-food-agent] SUCCEEDED: validated plan and presentation artifact produced",
             file=sys.stderr,
         )
-    payload = {
-        "mode": run.mode,
-        "execution": execution,
-        "boundary_outcome": run.boundary_outcome.model_dump(mode="json"),
-        "plan_result": (
-            run.plan_result.display.model_dump(mode="json")
-            if run.plan_result and run.plan_result.display
-            else run.plan_result.failure.model_dump(mode="json")
-            if run.plan_result and run.plan_result.failure
-            else None
-        ),
-        "agent_explanation": (
-            run.plan_result.agent_explanation.model_dump(mode="json")
-            if run.plan_result and run.plan_result.agent_explanation
-            else None
-        ),
-        "pipeline_events": [event.model_dump(mode="json") for event in run.pipeline_events],
-        "tool_events": [event.model_dump(mode="json") for event in run.tool_events],
-        "trace": {
-            "logical_trace_id": run.logical_trace_id,
-            "sdk_trace_id": run.sdk_trace_id,
-            "local_trace_file": run.local_trace_file,
-            "sensitive_payloads_exported": False,
-        },
-    }
+    payload = build_run_payload(run)
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     if run.plan_result is not None:
         return 0 if run.plan_result.failure is None else 2

@@ -1,0 +1,1492 @@
+{
+  "$defs": {
+    "ActivityContext": {
+      "enum": [
+        "ordinary",
+        "club_meal",
+        "meeting",
+        "workshop",
+        "party",
+        "sports_event",
+        "school_event",
+        "other"
+      ],
+      "title": "ActivityContext",
+      "type": "string"
+    },
+    "ActivityLevel": {
+      "enum": [
+        "none",
+        "light",
+        "moderate",
+        "heavy",
+        "unknown"
+      ],
+      "title": "ActivityLevel",
+      "type": "string"
+    },
+    "AppetiteBand": {
+      "enum": [
+        "very_light",
+        "light",
+        "normal",
+        "large",
+        "very_large",
+        "custom"
+      ],
+      "title": "AppetiteBand",
+      "type": "string"
+    },
+    "AppetiteProfileV2": {
+      "additionalProperties": false,
+      "properties": {
+        "band": {
+          "$ref": "#/$defs/AppetiteBand"
+        },
+        "stated_servings_milli": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stated Servings Milli"
+        }
+      },
+      "required": [
+        "band",
+        "stated_servings_milli"
+      ],
+      "title": "AppetiteProfileV2",
+      "type": "object"
+    },
+    "AttendanceStatus": {
+      "enum": [
+        "confirmed",
+        "expected",
+        "uncertain",
+        "late"
+      ],
+      "title": "AttendanceStatus",
+      "type": "string"
+    },
+    "BudgetIntentType": {
+      "enum": [
+        "no_budget",
+        "hard_maximum",
+        "approximate_target"
+      ],
+      "title": "BudgetIntentType",
+      "type": "string"
+    },
+    "BudgetIntentV2": {
+      "additionalProperties": false,
+      "properties": {
+        "budget_type": {
+          "$ref": "#/$defs/BudgetIntentType"
+        },
+        "currency": {
+          "anyOf": [
+            {
+              "const": "KRW",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Currency"
+        },
+        "target_amount_minor": {
+          "anyOf": [
+            {
+              "maximum": 1000000000000000,
+              "minimum": -1000000000000000,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Amount Minor"
+        },
+        "explicit_maximum_amount_minor": {
+          "anyOf": [
+            {
+              "maximum": 1000000000000000,
+              "minimum": -1000000000000000,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Explicit Maximum Amount Minor"
+        },
+        "cost_scope": {
+          "$ref": "#/$defs/CostScopeCandidateV2"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Text"
+        }
+      },
+      "required": [
+        "budget_type",
+        "currency",
+        "target_amount_minor",
+        "explicit_maximum_amount_minor",
+        "cost_scope",
+        "source_text"
+      ],
+      "title": "BudgetIntentV2",
+      "type": "object"
+    },
+    "CategorySelection": {
+      "enum": [
+        "include_all",
+        "any_of",
+        "prefer_all"
+      ],
+      "title": "CategorySelection",
+      "type": "string"
+    },
+    "ConflictResolutionV1": {
+      "additionalProperties": false,
+      "properties": {
+        "field_path": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "image_value": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Image Value"
+        },
+        "accepted_value": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Accepted Value",
+          "type": "string"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "explicit_text_overrode_image",
+            "explicit_total_overrode_derived_total"
+          ],
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field_path",
+        "image_value",
+        "accepted_value",
+        "source_text",
+        "reason"
+      ],
+      "title": "ConflictResolutionV1",
+      "type": "object"
+    },
+    "CostScopeCandidateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "include_menu_price": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Include Menu Price"
+        },
+        "include_delivery_fee": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Include Delivery Fee"
+        },
+        "include_service_fee": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Include Service Fee"
+        },
+        "include_discount": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Include Discount"
+        }
+      },
+      "required": [
+        "include_menu_price",
+        "include_delivery_fee",
+        "include_service_fee",
+        "include_discount"
+      ],
+      "title": "CostScopeCandidateV2",
+      "type": "object"
+    },
+    "EvidenceStatus": {
+      "enum": [
+        "explicit",
+        "inferred",
+        "defaulted",
+        "conflicted"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
+    "EvidenceV2": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^/.*",
+          "title": "Field Path",
+          "type": "string"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Text"
+        },
+        "status": {
+          "$ref": "#/$defs/EvidenceStatus"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "start_offset": {
+          "anyOf": [
+            {
+              "maximum": 5000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start Offset"
+        },
+        "end_offset": {
+          "anyOf": [
+            {
+              "maximum": 5000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End Offset"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Note"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "field_path",
+        "source_text",
+        "status",
+        "confidence",
+        "start_offset",
+        "end_offset",
+        "note"
+      ],
+      "title": "EvidenceV2",
+      "type": "object"
+    },
+    "FoodRole": {
+      "enum": [
+        "primary_meal",
+        "supplementary_meal",
+        "snack",
+        "tasting",
+        "other"
+      ],
+      "title": "FoodRole",
+      "type": "string"
+    },
+    "FoodScopeV2": {
+      "additionalProperties": false,
+      "properties": {
+        "requested_categories": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 16,
+          "title": "Requested Categories",
+          "type": "array"
+        },
+        "category_selection": {
+          "$ref": "#/$defs/CategorySelection"
+        },
+        "excluded_categories": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 16,
+          "title": "Excluded Categories",
+          "type": "array"
+        },
+        "restaurant_mixing": {
+          "$ref": "#/$defs/RestaurantMixing"
+        }
+      },
+      "required": [
+        "requested_categories",
+        "category_selection",
+        "excluded_categories",
+        "restaurant_mixing"
+      ],
+      "title": "FoodScopeV2",
+      "type": "object"
+    },
+    "HardRequirementKind": {
+      "enum": [
+        "allergy",
+        "diet",
+        "food_exclusion",
+        "religious_rule",
+        "spice_limit"
+      ],
+      "title": "HardRequirementKind",
+      "type": "string"
+    },
+    "HardRequirementV2": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/HardRequirementKind"
+        },
+        "affected_group_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Affected Group Ids",
+          "type": "array"
+        },
+        "terms": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Terms",
+          "type": "array"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "kind",
+        "affected_group_ids",
+        "terms",
+        "source_text"
+      ],
+      "title": "HardRequirementV2",
+      "type": "object"
+    },
+    "LeftoverStorage": {
+      "enum": [
+        "available",
+        "unavailable",
+        "unknown"
+      ],
+      "title": "LeftoverStorage",
+      "type": "string"
+    },
+    "LocaleCode": {
+      "enum": [
+        "ko",
+        "en",
+        "mixed",
+        "unknown"
+      ],
+      "title": "LocaleCode",
+      "type": "string"
+    },
+    "LocationHintV2": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/LocationSource"
+        },
+        "query": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Query"
+        },
+        "latitude": {
+          "anyOf": [
+            {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latitude"
+        },
+        "longitude": {
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Longitude"
+        }
+      },
+      "required": [
+        "source",
+        "query",
+        "latitude",
+        "longitude"
+      ],
+      "title": "LocationHintV2",
+      "type": "object"
+    },
+    "LocationSource": {
+      "enum": [
+        "user_text",
+        "browser_geolocation",
+        "request_context",
+        "application_default"
+      ],
+      "title": "LocationSource",
+      "type": "string"
+    },
+    "MealRequestCandidateV2": {
+      "additionalProperties": false,
+      "description": "The only model-owned structured output.",
+      "properties": {
+        "locale": {
+          "$ref": "#/$defs/LocaleCode"
+        },
+        "occasion": {
+          "$ref": "#/$defs/OccasionCandidateV2"
+        },
+        "party": {
+          "$ref": "#/$defs/PartyCandidateV2"
+        },
+        "location_hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocationHintV2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "food_scope": {
+          "$ref": "#/$defs/FoodScopeV2"
+        },
+        "hard_requirements": {
+          "items": {
+            "$ref": "#/$defs/HardRequirementV2"
+          },
+          "maxItems": 100,
+          "title": "Hard Requirements",
+          "type": "array"
+        },
+        "preferences": {
+          "items": {
+            "$ref": "#/$defs/PreferenceV2"
+          },
+          "maxItems": 100,
+          "title": "Preferences",
+          "type": "array"
+        },
+        "budget_intent": {
+          "$ref": "#/$defs/BudgetIntentV2"
+        },
+        "quantity_preference": {
+          "$ref": "#/$defs/QuantityPreferenceCandidateV2"
+        },
+        "restaurant_preferences": {
+          "$ref": "#/$defs/RestaurantPreferencesV2"
+        },
+        "restriction_disclosure": {
+          "$ref": "#/$defs/RestrictionDisclosureV2"
+        },
+        "context_notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 32,
+          "title": "Context Notes",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceV2"
+          },
+          "maxItems": 256,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "unresolved_issues": {
+          "items": {
+            "$ref": "#/$defs/UnresolvedIssueV2"
+          },
+          "maxItems": 64,
+          "title": "Unresolved Issues",
+          "type": "array"
+        }
+      },
+      "required": [
+        "locale",
+        "occasion",
+        "party",
+        "location_hint",
+        "food_scope",
+        "hard_requirements",
+        "preferences",
+        "budget_intent",
+        "quantity_preference",
+        "restaurant_preferences",
+        "restriction_disclosure",
+        "context_notes",
+        "evidence",
+        "unresolved_issues"
+      ],
+      "title": "MealRequestCandidateV2",
+      "type": "object"
+    },
+    "MealType": {
+      "enum": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "late_night",
+        "snack",
+        "other"
+      ],
+      "title": "MealType",
+      "type": "string"
+    },
+    "ObservationEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "modality": {
+          "enum": [
+            "image",
+            "user_text",
+            "application_context"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "explicit",
+            "inferred",
+            "overridden",
+            "ambiguous",
+            "unusable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Text"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "modality",
+        "status",
+        "confidence"
+      ],
+      "title": "ObservationEvidenceV1",
+      "type": "object"
+    },
+    "ObservedFoodV1": {
+      "additionalProperties": false,
+      "properties": {
+        "observation_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "category_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Category Code",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "estimated_units_min": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Estimated Units Min",
+          "type": "number"
+        },
+        "estimated_units_max": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Estimated Units Max",
+          "type": "number"
+        },
+        "remaining_ratio_min": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Remaining Ratio Min",
+          "type": "number"
+        },
+        "remaining_ratio_max": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Remaining Ratio Max",
+          "type": "number"
+        },
+        "condition": {
+          "enum": [
+            "new",
+            "partially_eaten",
+            "mostly_eaten",
+            "empty",
+            "unknown"
+          ],
+          "title": "Condition",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/ObservationEvidenceV1"
+        }
+      },
+      "required": [
+        "observation_id",
+        "category_code",
+        "label",
+        "unit",
+        "estimated_units_min",
+        "estimated_units_max",
+        "remaining_ratio_min",
+        "remaining_ratio_max",
+        "condition",
+        "evidence"
+      ],
+      "title": "ObservedFoodV1",
+      "type": "object"
+    },
+    "OccasionCandidateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "meal_type": {
+          "$ref": "#/$defs/MealType"
+        },
+        "service_style": {
+          "$ref": "#/$defs/ServiceStyle"
+        },
+        "activity_context": {
+          "$ref": "#/$defs/ActivityContext"
+        },
+        "food_role": {
+          "$ref": "#/$defs/FoodRole"
+        },
+        "leftover_storage": {
+          "$ref": "#/$defs/LeftoverStorage"
+        },
+        "scheduled_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scheduled At"
+        },
+        "duration_minutes": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 10080,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Duration Minutes"
+        }
+      },
+      "required": [
+        "meal_type",
+        "service_style",
+        "activity_context",
+        "food_role",
+        "leftover_storage",
+        "scheduled_at",
+        "duration_minutes"
+      ],
+      "title": "OccasionCandidateV2",
+      "type": "object"
+    },
+    "ParticipantGroupV2": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Group Id",
+          "type": "string"
+        },
+        "display_label": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Display Label"
+        },
+        "count": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Count",
+          "type": "integer"
+        },
+        "attendance_status": {
+          "$ref": "#/$defs/AttendanceStatus"
+        },
+        "appetite": {
+          "$ref": "#/$defs/AppetiteProfileV2"
+        },
+        "activity_level": {
+          "$ref": "#/$defs/ActivityLevel"
+        },
+        "recent_meal_status": {
+          "$ref": "#/$defs/RecentMealStatus"
+        }
+      },
+      "required": [
+        "group_id",
+        "display_label",
+        "count",
+        "attendance_status",
+        "appetite",
+        "activity_level",
+        "recent_meal_status"
+      ],
+      "title": "ParticipantGroupV2",
+      "type": "object"
+    },
+    "PartyCandidateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "total_count": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Total Count",
+          "type": "integer"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/ParticipantGroupV2"
+          },
+          "maxItems": 100,
+          "title": "Groups",
+          "type": "array"
+        }
+      },
+      "required": [
+        "total_count",
+        "groups"
+      ],
+      "title": "PartyCandidateV2",
+      "type": "object"
+    },
+    "PreferencePolarity": {
+      "enum": [
+        "prefer",
+        "avoid"
+      ],
+      "title": "PreferencePolarity",
+      "type": "string"
+    },
+    "PreferenceStrength": {
+      "enum": [
+        "weak",
+        "normal",
+        "strong"
+      ],
+      "title": "PreferenceStrength",
+      "type": "string"
+    },
+    "PreferenceTargetKind": {
+      "enum": [
+        "food_category",
+        "dish",
+        "ingredient",
+        "flavor",
+        "texture",
+        "spice",
+        "restaurant",
+        "variety",
+        "other"
+      ],
+      "title": "PreferenceTargetKind",
+      "type": "string"
+    },
+    "PreferenceV2": {
+      "additionalProperties": false,
+      "properties": {
+        "preference_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Preference Id",
+          "type": "string"
+        },
+        "target_kind": {
+          "$ref": "#/$defs/PreferenceTargetKind"
+        },
+        "polarity": {
+          "$ref": "#/$defs/PreferencePolarity"
+        },
+        "strength": {
+          "$ref": "#/$defs/PreferenceStrength"
+        },
+        "affected_group_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Affected Group Ids",
+          "type": "array"
+        },
+        "terms": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 32,
+          "title": "Terms",
+          "type": "array"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "preference_id",
+        "target_kind",
+        "polarity",
+        "strength",
+        "affected_group_ids",
+        "terms",
+        "source_text"
+      ],
+      "title": "PreferenceV2",
+      "type": "object"
+    },
+    "QuantityPreferenceCandidateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "primary_objective": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RiskPreference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shortage_tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToleranceLevel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leftover_tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToleranceLevel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "primary_objective",
+        "shortage_tolerance",
+        "leftover_tolerance"
+      ],
+      "title": "QuantityPreferenceCandidateV2",
+      "type": "object"
+    },
+    "RecentMealStatus": {
+      "enum": [
+        "not_recent",
+        "light_meal_recently",
+        "full_meal_recently",
+        "unknown"
+      ],
+      "title": "RecentMealStatus",
+      "type": "string"
+    },
+    "RestaurantMixing": {
+      "enum": [
+        "single_restaurant_required",
+        "single_restaurant_preferred",
+        "multiple_allowed",
+        "unspecified"
+      ],
+      "title": "RestaurantMixing",
+      "type": "string"
+    },
+    "RestaurantPreferencesV2": {
+      "additionalProperties": false,
+      "properties": {
+        "preferred_names": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Preferred Names",
+          "type": "array"
+        },
+        "excluded_names": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Excluded Names",
+          "type": "array"
+        }
+      },
+      "required": [
+        "preferred_names",
+        "excluded_names"
+      ],
+      "title": "RestaurantPreferencesV2",
+      "type": "object"
+    },
+    "RestrictionDisclosureStatus": {
+      "enum": [
+        "reported",
+        "none_reported",
+        "not_provided"
+      ],
+      "title": "RestrictionDisclosureStatus",
+      "type": "string"
+    },
+    "RestrictionDisclosureV2": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/RestrictionDisclosureStatus"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "RestrictionDisclosureV2",
+      "type": "object"
+    },
+    "RiskPreference": {
+      "enum": [
+        "minimize_leftovers",
+        "balanced",
+        "minimize_shortage"
+      ],
+      "title": "RiskPreference",
+      "type": "string"
+    },
+    "SceneAnalysisV1": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_name": {
+          "const": "scene_analysis",
+          "default": "scene_analysis",
+          "title": "Schema Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "image_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Image Id"
+        },
+        "image_provided": {
+          "title": "Image Provided",
+          "type": "boolean"
+        },
+        "visible_people": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Visible People"
+        },
+        "visible_people_confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Visible People Confidence",
+          "type": "number"
+        },
+        "visible_people_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObservationEvidenceV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "additional_people": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Additional People",
+          "type": "integer"
+        },
+        "explicit_total_people": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Explicit Total People"
+        },
+        "existing_food": {
+          "items": {
+            "$ref": "#/$defs/ObservedFoodV1"
+          },
+          "maxItems": 20,
+          "title": "Existing Food",
+          "type": "array"
+        },
+        "meal_context": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MealType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meal_context_confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Meal Context Confidence",
+          "type": "number"
+        },
+        "environment_label": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Environment Label"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 32,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "image_id",
+        "image_provided",
+        "visible_people",
+        "visible_people_confidence",
+        "visible_people_evidence",
+        "additional_people",
+        "explicit_total_people",
+        "existing_food",
+        "meal_context",
+        "meal_context_confidence",
+        "environment_label",
+        "warnings"
+      ],
+      "title": "SceneAnalysisV1",
+      "type": "object"
+    },
+    "SemanticNamespace": {
+      "enum": [
+        "allergen",
+        "diet",
+        "ingredient",
+        "food_category",
+        "spice",
+        "dish",
+        "flavor",
+        "restaurant_feature",
+        "other"
+      ],
+      "title": "SemanticNamespace",
+      "type": "string"
+    },
+    "SemanticTermV2": {
+      "additionalProperties": false,
+      "properties": {
+        "namespace": {
+          "$ref": "#/$defs/SemanticNamespace"
+        },
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "code",
+        "label"
+      ],
+      "title": "SemanticTermV2",
+      "type": "object"
+    },
+    "ServiceStyle": {
+      "enum": [
+        "full_meal",
+        "light_meal",
+        "snack",
+        "shared_tasting",
+        "other"
+      ],
+      "title": "ServiceStyle",
+      "type": "string"
+    },
+    "ToleranceLevel": {
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "title": "ToleranceLevel",
+      "type": "string"
+    },
+    "UnresolvedIssueKind": {
+      "enum": [
+        "missing",
+        "ambiguous",
+        "conflicting",
+        "unsupported"
+      ],
+      "title": "UnresolvedIssueKind",
+      "type": "string"
+    },
+    "UnresolvedIssueV2": {
+      "additionalProperties": false,
+      "properties": {
+        "issue_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Issue Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/UnresolvedIssueKind"
+        },
+        "field_path": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^/.*",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field Path"
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Text"
+        }
+      },
+      "required": [
+        "issue_id",
+        "kind",
+        "field_path",
+        "message",
+        "source_text"
+      ],
+      "title": "UnresolvedIssueV2",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "multimodal_meal_request_candidate",
+      "default": "multimodal_meal_request_candidate",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "request_candidate": {
+      "$ref": "#/$defs/MealRequestCandidateV2"
+    },
+    "scene_analysis": {
+      "$ref": "#/$defs/SceneAnalysisV1"
+    },
+    "conflict_resolutions": {
+      "items": {
+        "$ref": "#/$defs/ConflictResolutionV1"
+      },
+      "maxItems": 32,
+      "title": "Conflict Resolutions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "request_candidate",
+    "scene_analysis",
+    "conflict_resolutions"
+  ],
+  "title": "MultimodalMealRequestCandidateV1",
+  "type": "object"
+}

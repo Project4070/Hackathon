@@ -147,6 +147,43 @@ The bounded crawler, semantic-enrichment agent, direct restaurant source, stores
 replanning, feedback, end-to-end application entry point, and adversarial tests
 are all under `src/group_food_agent` and `tests`.
 
+## ORDERLY multimodal web demo
+
+The same planner is available through a Korean-first, phone-responsive web UI.
+Its primary input is one transient scene photo plus one short note. The photo is
+validated, oriented, stripped of metadata, resized in memory, and sent to the
+vision-capable Interpreter Agent as a Base64 image input. Raw image bytes and
+Base64 are never written to the local trace or returned to the browser.
+
+```powershell
+group-food-web
+```
+
+Open <http://127.0.0.1:8000>. The UI also offers a prepared offline demo that
+uses reviewed fixtures and clearly labels its scene and team history as
+simulated. Text-only JSON remains available for compatibility:
+
+```powershell
+Invoke-RestMethod -Method Post -ContentType 'application/json' `
+  -Body '{"text":"먹고 싶은 거:shrimp 인원:20명 예산:20만원 장소:신논현역","run_mode":"live"}' `
+  http://127.0.0.1:8000/api/runs
+```
+
+For temporary phone access during judging, install `cloudflared`, keep the web
+server running, and launch a testing-only Quick Tunnel:
+
+```powershell
+cloudflared tunnel --url http://localhost:8000
+```
+
+Share the generated `trycloudflare.com` URL only for the demo and stop the
+tunnel afterward. This is not production hosting or authentication.
+
+Multimodal calculation remains conservative: medium/low-confidence people
+counts require confirmation, existing food is credited only from reviewed
+category/unit serving references, and photo-observed food never covers protected
+allergy or vegetarian demand.
+
 ## Naver Place HTTP adapter demo
 
 The Naver Place adapter is deliberately separate from the planner source. It

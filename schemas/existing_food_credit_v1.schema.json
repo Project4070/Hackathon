@@ -1,0 +1,122 @@
+{
+  "$defs": {
+    "ExistingFoodCreditLineV1": {
+      "additionalProperties": false,
+      "properties": {
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "category_code": {
+          "title": "Category Code",
+          "type": "string"
+        },
+        "accepted": {
+          "title": "Accepted",
+          "type": "boolean"
+        },
+        "credited_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Credited Servings Milli",
+          "type": "integer"
+        },
+        "reference_servings_min_milli": {
+          "anyOf": [
+            {
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference Servings Min Milli"
+        },
+        "reference_source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference Source Url"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "observation_id",
+        "category_code",
+        "accepted",
+        "credited_servings_milli",
+        "reference_servings_min_milli",
+        "reference_source_url",
+        "reason"
+      ],
+      "title": "ExistingFoodCreditLineV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "existing_food_credit",
+      "default": "existing_food_credit",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "total_credited_servings_milli": {
+      "maximum": 10000000,
+      "minimum": 0,
+      "title": "Total Credited Servings Milli",
+      "type": "integer"
+    },
+    "protected_demand_credit_milli": {
+      "const": 0,
+      "default": 0,
+      "title": "Protected Demand Credit Milli",
+      "type": "integer"
+    },
+    "lines": {
+      "items": {
+        "$ref": "#/$defs/ExistingFoodCreditLineV1"
+      },
+      "maxItems": 20,
+      "title": "Lines",
+      "type": "array"
+    },
+    "policy": {
+      "const": "conservative_lower_bound",
+      "default": "conservative_lower_bound",
+      "title": "Policy",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "total_credited_servings_milli",
+    "lines",
+    "warnings"
+  ],
+  "title": "ExistingFoodCreditV1",
+  "type": "object"
+}

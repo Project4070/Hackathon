@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2efe7">
+  <title>ORDERLY · 단체 음식 수량 에이전트</title>
+  <meta name="description" content="사진 한 장과 특별사항 한 줄로 단체 주문 수량을 계산합니다.">
+  <link rel="stylesheet" href="/assets/app.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand-row">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span class="brand">ORDERLY</span>
+        <span class="status-pill">GROUP FOOD AGENT</span>
+      </div>
+      <p class="eyebrow">SEE THE ROOM. COUNT THE FOOD. ORDER THE RIGHT AMOUNT.</p>
+      <h1>사진 한 장과 특별사항 한 줄이면,<br><em>단체 주문 준비가 끝납니다.</em></h1>
+      <p class="lede">보이는 것은 ORDERLY가 파악하고, 보이지 않는 제약만 알려주세요. AI는 상황을 구조화하고, 수량은 검증된 코드가 계산합니다.</p>
+    </header>
+
+    <section class="input-card" aria-labelledby="input-title">
+      <div class="section-heading">
+        <span class="step">01</span>
+        <div><h2 id="input-title">현장 제출</h2><p>사진은 분석 후 저장되지 않습니다.</p></div>
+      </div>
+      <form id="order-form">
+        <div class="capture-grid">
+          <label class="photo-drop" id="photo-drop">
+            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+            <span class="camera-glyph" aria-hidden="true">◎</span>
+            <strong>현장 사진 추가</strong>
+            <small>카메라 또는 앨범 · JPG, PNG, WEBP · 최대 8MB</small>
+            <img id="photo-preview" alt="선택한 현장 사진 미리보기" hidden>
+          </label>
+          <div class="notes-field">
+            <label for="notes">사진에 보이지 않는 특별사항</label>
+            <textarea id="notes" name="notes" maxlength="5000" rows="5" placeholder="예: 사진 밖에 2명이 더 오고, 1명은 채식이에요. 매운 음식은 피하고 싶고 예산은 20만원, 장소는 신논현역이에요."></textarea>
+            <div class="field-meta"><span id="char-count">0 / 5,000</span><button type="button" id="remove-photo" class="text-button" hidden>사진 제거</button></div>
+          </div>
+        </div>
+        <div class="context-row">
+          <button type="button" id="location-button" class="context-button"><span aria-hidden="true">⌖</span><span id="location-label">현재 위치 사용</span></button>
+          <span id="capture-time" class="context-note"></span>
+        </div>
+        <div class="actions">
+          <button type="submit" id="submit-button" class="primary-button">주문안 계산하기 <span aria-hidden="true">→</span></button>
+          <button type="button" id="demo-button" class="secondary-button">준비된 데모 실행</button>
+        </div>
+        <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="workspace" class="workspace" hidden aria-live="polite">
+      <article id="scene-panel" class="panel scene-panel">
+        <div class="section-heading"><span class="step">02</span><div><h2>ORDERLY가 확인한 현장</h2><p>관찰값과 신뢰도를 구분해 표시합니다.</p></div></div>
+        <div id="scene-content" class="panel-content"></div>
+      </article>
+      <article id="result-panel" class="panel result-panel">
+        <div class="section-heading"><span class="step">03</span><div><h2>최종 주문안</h2><p>검증된 계산 결과와 세 가지 전략입니다.</p></div></div>
+        <div id="result-content" class="panel-content"></div>
+        <details class="json-box">
+          <summary>최종 JSON 보기 <button type="button" id="copy-json" class="copy-button">복사</button></summary>
+          <pre id="result-json"></pre>
+        </details>
+      </article>
+      <article id="trace-panel" class="panel trace-panel">
+        <div class="section-heading"><span class="step">04</span><div><h2>Agent trace</h2><p>AI 해석과 결정론적 도구 실행을 시간순으로 확인합니다.</p></div></div>
+        <div id="trace-summary" class="trace-summary"></div>
+        <div id="trace-content" class="trace-list"></div>
+      </article>
+    </section>
+  </main>
+  <footer><span>ORDERLY / HACKATHON BUILD</span><span>추천안은 실제 주문 전 가격·재고를 확인하세요.</span></footer>
+</body>
+</html>

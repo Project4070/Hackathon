@@ -102,6 +102,7 @@ class PlanningCaseState:
     unavailable_restaurant_ids: set[str] = field(default_factory=set)
     unavailable_menu_item_ids: set[str] = field(default_factory=set)
     demand_multiplier_basis_points: int = 10_000
+    existing_food_credit_milli: int = 0
     menu_serving_multipliers_basis_points: dict[str, int] = field(default_factory=dict)
     feedback: list[MealFeedbackV1] = field(default_factory=list)
     feedback_adjustments: list[FeedbackAdjustmentV1] = field(default_factory=list)
