@@ -3,37 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f2efe7">
+  <meta name="theme-color" content="#f7f8f3">
   <title>ORDERLY · 단체 음식 수량 에이전트</title>
-  <meta name="description" content="사진 한 장과 특별사항 한 줄로 단체 주문 수량을 계산합니다.">
+  <meta name="description" content="찍는 순간, 주문이 정리된다. 사진 한 장과 특별사항 한 줄로 단체 주문 수량을 계산합니다.">
   <link rel="stylesheet" href="/assets/app.css">
   <script src="/assets/app.js" defer></script>
 </head>
 <body>
   <main class="shell">
     <header class="hero">
+      <div class="hero-decor" aria-hidden="true">
+        <span class="spark spark-one">✦</span>
+        <span class="spark spark-two">✦</span>
+        <span class="orbit-dot"></span>
+      </div>
       <div class="brand-row">
         <span class="brand-mark" aria-hidden="true">O</span>
         <span class="brand">ORDERLY</span>
-        <span class="status-pill">GROUP FOOD AGENT</span>
+        <span class="status-pill"><i aria-hidden="true"></i> GROUP FOOD AGENT</span>
       </div>
-      <p class="eyebrow">SEE THE ROOM. COUNT THE FOOD. ORDER THE RIGHT AMOUNT.</p>
-      <h1>사진 한 장과 특별사항 한 줄이면,<br><em>단체 주문 준비가 끝납니다.</em></h1>
-      <p class="lede">보이는 것은 ORDERLY가 파악하고, 보이지 않는 제약만 알려주세요. AI는 상황을 구조화하고, 수량은 검증된 코드가 계산합니다.</p>
+      <p class="eyebrow">SNAP. UNDERSTAND. ORDER.</p>
+      <h1>찍는 순간,<br><em>주문이 정리된다.</em></h1>
+      <p class="lede">현장을 찍고 사진에 없는 특별사항만 적어주세요. ORDERLY가 인원과 음식을 파악해 딱 맞는 주문안을 정리합니다.</p>
     </header>
 
     <section class="input-card" aria-labelledby="input-title">
       <div class="section-heading">
         <span class="step">01</span>
-        <div><h2 id="input-title">현장 제출</h2><p>사진은 분석 후 저장되지 않습니다.</p></div>
+        <div><h2 id="input-title">사진과 특별사항</h2><p>사진은 분석 후 저장되지 않습니다.</p></div>
+        <span class="heading-sticker" aria-hidden="true">찰칵!</span>
       </div>
       <form id="order-form">
         <div class="capture-grid">
           <label class="photo-drop" id="photo-drop">
             <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
-            <span class="camera-glyph" aria-hidden="true">◎</span>
-            <strong>현장 사진 추가</strong>
-            <small>카메라 또는 앨범 · JPG, PNG, WEBP · 최대 8MB</small>
+            <span class="camera-glyph" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><path d="M16 14.5 19 10h10l3 4.5h5.5a4 4 0 0 1 4 4v17a4 4 0 0 1-4 4h-27a4 4 0 0 1-4-4v-17a4 4 0 0 1 4-4H16Z"/><circle cx="24" cy="27" r="7"/><path d="M35 20h.01"/></svg>
+            </span>
+            <strong>사진 찍기 또는 가져오기</strong>
+            <small>현장 전체가 보이게 찍어주세요</small>
+            <span class="drop-hint">JPG, PNG, WEBP · 최대 8MB</span>
             <img id="photo-preview" alt="선택한 현장 사진 미리보기" hidden>
           </label>
           <div class="notes-field">
@@ -46,8 +55,13 @@
           <button type="button" id="location-button" class="context-button"><span aria-hidden="true">⌖</span><span id="location-label">현재 위치 사용</span></button>
           <span id="capture-time" class="context-note"></span>
         </div>
+        <div class="trust-row" aria-label="ORDERLY 처리 원칙">
+          <span><i aria-hidden="true">✓</i> 한 번에 제출</span>
+          <span><i aria-hidden="true">✓</i> 사진 미저장</span>
+          <span><i aria-hidden="true">✓</i> 수량은 코드로 계산</span>
+        </div>
         <div class="actions">
-          <button type="submit" id="submit-button" class="primary-button">주문안 계산하기 <span aria-hidden="true">→</span></button>
+          <button type="submit" id="submit-button" class="primary-button"><span>사진으로 주문 정리하기</span><span class="button-arrow" aria-hidden="true">→</span></button>
           <button type="button" id="demo-button" class="secondary-button">준비된 데모 실행</button>
         </div>
         <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
@@ -74,6 +88,6 @@
       </article>
     </section>
   </main>
-  <footer><span>ORDERLY / HACKATHON BUILD</span><span>추천안은 실제 주문 전 가격·재고를 확인하세요.</span></footer>
+  <footer><span class="footer-brand"><i aria-hidden="true"></i> ORDERLY / HACKATHON BUILD</span><span>추천안은 실제 주문 전 가격·재고를 확인하세요.</span></footer>
 </body>
 </html>
