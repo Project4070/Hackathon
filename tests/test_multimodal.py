@@ -5,6 +5,7 @@ import pytest
 from PIL import Image
 from starlette.testclient import TestClient
 
+from group_food_agent.contracts import UnresolvedIssueKind, UnresolvedIssueV2
 from group_food_agent.multimodal import (
     MultimodalContextV1,
     MultimodalMealRequestCandidateV1,
@@ -15,7 +16,9 @@ from group_food_agent.multimodal import (
     merge_multimodal_candidate,
     normalize_image,
 )
+from group_food_agent.intake_normalization import normalize_candidate_for_validation
 from group_food_agent.web_app import app
+from group_food_agent.validation import ValidationContextV2, validate_planning_profile
 
 
 def _scene(food: ObservedFoodV1) -> SceneAnalysisV1:
@@ -165,6 +168,159 @@ def test_medium_confidence_people_count_requires_confirmation(canonical_candidat
     merged = merge_multimodal_candidate(interpreted, context)
 
     assert any(issue.issue_id == "scene_people_confirmation" for issue in merged.unresolved_issues)
+
+
+def test_photo_total_gets_intake_evidence_when_model_omits_it(canonical_candidate, canonical_raw_text):
+    candidate_without_total_evidence = canonical_candidate.model_copy(update={
+        "evidence": [
+            evidence
+            for evidence in canonical_candidate.evidence
+            if evidence.field_path != "/party/total_count"
+        ]
+    })
+    scene = _scene(_food()).model_copy(update={
+        "visible_people": 15,
+        "additional_people": 0,
+        "explicit_total_people": None,
+    })
+    interpreted = MultimodalMealRequestCandidateV1(
+        request_candidate=candidate_without_total_evidence,
+        scene_analysis=scene,
+        conflict_resolutions=[],
+    )
+    context = MultimodalContextV1(
+        captured_at=datetime.now(UTC),
+        timezone_offset_minutes=540,
+        location_permission="unavailable",
+    )
+
+    merged = merge_multimodal_candidate(interpreted, context, raw_notes=canonical_raw_text)
+    total_evidence = [
+        evidence for evidence in merged.evidence if evidence.field_path == "/party/total_count"
+    ]
+    outcome = validate_planning_profile(
+        merged,
+        ValidationContextV2(request_id="request-photo", case_id="case-photo"),
+        raw_text=canonical_raw_text,
+    )
+
+    assert len(total_evidence) == 1
+    assert total_evidence[0].status == "explicit"
+    assert total_evidence[0].source_text == "15명"
+    assert total_evidence[0].confidence == 1.0
+    assert outcome.status == "ready_for_planning"
+
+
+def test_explicit_total_bridge_uses_only_verbatim_user_evidence(canonical_candidate):
+    notes = "사진에는 열다섯 명이지만 총 17명이 참석해요."
+    scene = _scene(_food()).model_copy(update={
+        "visible_people": 15,
+        "additional_people": 2,
+        "explicit_total_people": 17,
+    })
+    interpreted = MultimodalMealRequestCandidateV1(
+        request_candidate=canonical_candidate.model_copy(update={
+            "evidence": [
+                evidence
+                for evidence in canonical_candidate.evidence
+                if evidence.field_path != "/party/total_count"
+            ]
+        }),
+        scene_analysis=scene,
+        conflict_resolutions=[{
+            "field_path": "/party/total_count",
+            "image_value": "15",
+            "accepted_value": "17",
+            "source_text": "총 17명이 참석해요",
+            "reason": "explicit_total_overrode_derived_total",
+        }],
+    )
+    context = MultimodalContextV1(
+        captured_at=datetime.now(UTC),
+        timezone_offset_minutes=540,
+        location_permission="unavailable",
+    )
+
+    merged = merge_multimodal_candidate(interpreted, context, raw_notes=notes)
+    total_evidence = next(
+        evidence for evidence in merged.evidence if evidence.field_path == "/party/total_count"
+    )
+
+    assert total_evidence.status == "explicit"
+    assert total_evidence.source_text == "총 17명이 참석해요"
+    assert notes[total_evidence.start_offset:total_evidence.end_offset] == total_evidence.source_text
+
+
+def test_unusable_photo_defaults_model_invented_appetite_and_asks_only_for_count(
+    canonical_candidate,
+    canonical_raw_text,
+):
+    groups = [
+        group.model_copy(update={
+            "appetite": group.appetite.model_copy(update={
+                "band": "custom",
+                "stated_servings_milli": None,
+            })
+        })
+        for group in canonical_candidate.party.groups
+    ]
+    food_scope = canonical_candidate.food_scope.model_copy(update={
+        "requested_categories": [],
+    })
+    candidate = canonical_candidate.model_copy(update={
+        "party": canonical_candidate.party.model_copy(update={"groups": groups}),
+        "food_scope": food_scope,
+        "evidence": [
+            evidence
+            for evidence in canonical_candidate.evidence
+            if evidence.field_path != "/party/total_count"
+        ],
+        "unresolved_issues": [
+            UnresolvedIssueV2(
+                issue_id="missing-food",
+                kind=UnresolvedIssueKind.MISSING,
+                field_path="/food_scope/requested_categories",
+                message="요청한 음식 종류가 제공되지 않았습니다.",
+                source_text=None,
+            )
+        ],
+    })
+    scene = _scene(_food()).model_copy(update={
+        "visible_people": None,
+        "visible_people_confidence": 0.0,
+        "visible_people_evidence": None,
+        "explicit_total_people": None,
+    })
+    interpreted = MultimodalMealRequestCandidateV1(
+        request_candidate=candidate,
+        scene_analysis=scene,
+        conflict_resolutions=[],
+    )
+    context = MultimodalContextV1(
+        captured_at=datetime.now(UTC),
+        timezone_offset_minutes=540,
+        location_permission="unavailable",
+    )
+    raw_text = canonical_raw_text.replace("동아리원 15명이", "동아리원 여러 명이").replace(
+        "치킨과 피자를 모두 원합니다. ", ""
+    )
+
+    merged = merge_multimodal_candidate(interpreted, context, raw_notes=raw_text)
+    normalized = normalize_candidate_for_validation(merged, raw_text)
+    outcome = validate_planning_profile(
+        normalized,
+        ValidationContextV2(request_id="request-unusable", case_id="case-unusable"),
+        raw_text=raw_text,
+    )
+
+    assert all(group.appetite.band == "normal" for group in normalized.party.groups)
+    assert normalized.food_scope.requested_categories == []
+    assert normalized.food_scope.category_selection == "any_of"
+    assert [issue.issue_id for issue in normalized.unresolved_issues] == ["scene_people_unusable"]
+    assert outcome.status == "clarification_required"
+    assert all(issue.code != "custom_appetite_value_missing" for issue in outcome.issues)
+    assert all(issue.code != "material_evidence_missing" for issue in outcome.issues)
+    assert len(outcome.issues) == 1
 
 
 def test_offline_web_run_exposes_scene_trace_and_sanitized_path():

@@ -265,7 +265,7 @@ async def _execute(data: dict[str, Any]) -> dict[str, Any]:
             )
         scene = interpreted.scene_analysis
         conflicts = [item.model_dump(mode="json") for item in interpreted.conflict_resolutions]
-        candidate = merge_multimodal_candidate(interpreted, app_context)
+        candidate = merge_multimodal_candidate(interpreted, app_context, raw_notes=notes)
         interpreter = FixtureInterpreter(candidate)
         multimodal_events.append(_event("agent_completed", "multimodal_interpreter", case_id, {
             "visible_people": scene.visible_people,
@@ -275,6 +275,11 @@ async def _execute(data: dict[str, Any]) -> dict[str, Any]:
         multimodal_events.append(_event("stage_completed", "multimodal_merge", case_id, {
             "conflict_resolutions": len(conflicts),
             "candidate_total_people": candidate.party.total_count,
+            "total_count_evidence_ids": [
+                evidence.evidence_id
+                for evidence in candidate.evidence
+                if evidence.field_path == "/party/total_count"
+            ],
         }))
 
     if scene is not None:

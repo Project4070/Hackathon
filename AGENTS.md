@@ -77,7 +77,7 @@ Assume judges will deliberately stress the natural-language input with absurd, c
 - Number of expected participants.
 - Location and desired delivery time.
 - Meal context: full meal, late-night meal, or snack.
-- Desired food categories as non-blocking context; they never filter the configured direct menu pool.
+- Desired food categories as optional, non-blocking context; they never filter the configured direct menu pool. If none are stated, do not ask for one: evaluate every eligible restaurant and menu in the bounded nearby source and let deterministic ranking choose the recommendation.
 - Budget, if one exists.
 - Whether the organizer prefers to minimize shortage risk, leftovers, or balance both.
 - Relevant circumstances such as recent meals or significant physical activity.
@@ -349,7 +349,7 @@ Use a bounded crawler to acquire publicly visible nearby restaurant and menu dat
 
 The bounded domain is:
 
-- Food categories: unrestricted context labels that never filter or block the bounded source pool.
+- Food categories: optional unrestricted context labels that never filter or block the bounded source pool; an empty category list explicitly means search all eligible source-backed menus.
 - Restaurants per category: 3-5.
 - Representative menu and size options for each restaurant.
 - A bounded nearby restaurant/menu source adapter containing source identity, prices, sizes, weights, slice counts, pizza diameters, explicit dietary tags, provenance, source timestamps, and serving estimates.

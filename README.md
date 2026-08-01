@@ -184,6 +184,13 @@ counts require confirmation, existing food is credited only from reviewed
 category/unit serving references, and photo-observed food never covers protected
 allergy or vegetarian demand.
 
+Food preference is optional. When the note does not name a desired category,
+ORDERLY does not ask a follow-up question: it evaluates every eligible menu from
+all restaurants in the bounded nearby source and lets deterministic constraint
+validation and ranking choose the recommendation. Image-derived custom appetite
+values without an explicit user-provided serving amount are replaced by the
+documented normal-appetite default rather than blocking the run.
+
 ## Naver Place HTTP adapter demo
 
 The Naver Place adapter is deliberately separate from the planner source. It

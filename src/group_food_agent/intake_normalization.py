@@ -7,6 +7,7 @@ from .contracts import (
     AppetiteBand,
     AppetiteProfileV2,
     AttendanceStatus,
+    CategorySelection,
     EvidenceStatus,
     EvidenceV2,
     MealRequestCandidateV2,
@@ -170,6 +171,33 @@ def normalize_candidate_for_validation(
         if item.source_text is None or item.source_text in raw_text
     ]
     party = candidate.party
+    defaulted_appetite_indexes: list[int] = []
+    normalized_groups: list[ParticipantGroupV2] = []
+    for index, group in enumerate(party.groups):
+        appetite_path = f"/party/groups/{index}/appetite"
+        has_explicit_appetite = any(
+            item.status in {EvidenceStatus.EXPLICIT, EvidenceStatus.CONFLICTED}
+            and (
+                item.field_path == appetite_path
+                or item.field_path.startswith(appetite_path + "/")
+            )
+            for item in evidence
+        )
+        if (
+            group.appetite.band == AppetiteBand.CUSTOM
+            and group.appetite.stated_servings_milli is None
+            and not has_explicit_appetite
+        ):
+            group = group.model_copy(update={
+                "appetite": AppetiteProfileV2(
+                    band=AppetiteBand.NORMAL,
+                    stated_servings_milli=None,
+                )
+            })
+            defaulted_appetite_indexes.append(index)
+        normalized_groups.append(group)
+    if normalized_groups != party.groups:
+        party = party.model_copy(update={"groups": normalized_groups})
     defaulted_group_index: int | None = None
     completed_partial_groups = False
     if not party.groups:
@@ -221,6 +249,19 @@ def normalize_candidate_for_validation(
             )
 
     existing_ids = {item.evidence_id for item in evidence}
+    for index in defaulted_appetite_indexes:
+        evidence.append(
+            EvidenceV2(
+                evidence_id=_unique_id(existing_ids, f"default_group_{index + 1}_appetite"),
+                field_path=f"/party/groups/{index}/appetite",
+                source_text=None,
+                status=EvidenceStatus.DEFAULTED,
+                confidence=1.0,
+                start_offset=None,
+                end_offset=None,
+                note="Application replaced an unsupported image-derived custom appetite with the disclosed normal-appetite default.",
+            )
+        )
     if defaulted_group_index is not None:
         defaulted_group = party.groups[defaulted_group_index]
         evidence.append(
@@ -281,7 +322,19 @@ def normalize_candidate_for_validation(
                 note="Application reconstructed literal category evidence from the extracted term.",
             )
 
-    unresolved_issues = candidate.unresolved_issues
+    food_scope = candidate.food_scope
+    if not food_scope.requested_categories:
+        food_scope = food_scope.model_copy(update={"category_selection": CategorySelection.ANY_OF})
+
+    unresolved_issues = [
+        issue
+        for issue in candidate.unresolved_issues
+        if not (
+            not food_scope.requested_categories
+            and issue.kind is UnresolvedIssueKind.MISSING
+            and issue.field_path == "/food_scope/requested_categories"
+        )
+    ]
     if completed_partial_groups:
         unresolved_issues = [
             issue
@@ -299,6 +352,7 @@ def normalize_candidate_for_validation(
     return candidate.model_copy(
         update={
             "party": party,
+            "food_scope": food_scope,
             "evidence": evidence,
             "unresolved_issues": unresolved_issues,
         }

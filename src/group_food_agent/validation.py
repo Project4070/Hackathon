@@ -429,20 +429,20 @@ def _build_clarification_question(issues: list[ContractIssueV2]) -> str:
     actions: list[str] = []
     for issue in issues:
         if issue.code == "participant_group_counts_mismatch":
-            actions.append("confirm the total participant count and mutually exclusive subgroup counts")
+            actions.append("최종 참석 인원과 서로 겹치지 않는 참가자 그룹별 인원을 확인해 주세요")
         elif issue.code == "location_required":
-            actions.append("provide the delivery area or address")
+            actions.append("배달 지역이나 주소를 알려 주세요")
         elif "budget" in issue.code:
-            actions.append("confirm the KRW budget and whether it is a target or hard maximum")
+            actions.append("원화 예산과 목표 금액인지 최대 한도인지 확인해 주세요")
         elif "evidence" in issue.code:
-            actions.append("confirm the unsupported or conflicting extracted fact")
+            actions.append("근거가 없거나 충돌하는 입력값을 확인해 주세요")
         elif "requirement" in issue.code or "group" in issue.code:
-            actions.append("clarify which mutually exclusive participant group each restriction applies to")
+            actions.append("각 제약이 적용되는 참가자 그룹을 구분해 주세요")
         else:
             actions.append(issue.message)
     unique_actions = list(dict.fromkeys(actions))
     joined = "; ".join(unique_actions)
-    question = f"Before planning, please {joined}."
+    question = f"주문안을 계산하기 전에 다음을 확인해 주세요: {joined}."
     return question[:500]
 
 
@@ -698,7 +698,15 @@ def validate_planning_profile(
             for evidence in candidate.evidence
             if evidence.field_path == material_path or evidence.field_path.startswith(material_path + "/")
         ]
-        if not matches:
+        already_unresolved = any(
+            unresolved.field_path == material_path
+            or (
+                unresolved.field_path is not None
+                and unresolved.field_path.startswith(material_path + "/")
+            )
+            for unresolved in candidate.unresolved_issues
+        )
+        if not matches and not already_unresolved:
             blockers.append(
                 _contract_issue(
                     "material_evidence_missing",

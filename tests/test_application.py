@@ -178,7 +178,19 @@ async def test_missing_food_category_does_not_block_planning(
         if not item.field_path.startswith("/food_scope/requested_categories")
     ]
     candidate = canonical_candidate.model_copy(
-        update={"food_scope": food_scope, "evidence": evidence}
+        update={
+            "food_scope": food_scope,
+            "evidence": evidence,
+            "unresolved_issues": [
+                UnresolvedIssueV2(
+                    issue_id="missing-food-category",
+                    kind=UnresolvedIssueKind.MISSING,
+                    field_path="/food_scope/requested_categories",
+                    message="요청한 음식 종류가 제공되지 않았습니다.",
+                    source_text=None,
+                )
+            ],
+        }
     )
 
     run = await run_group_food_agent(
@@ -191,6 +203,13 @@ async def test_missing_food_category_does_not_block_planning(
     assert run.boundary_outcome.status == "ready_for_planning"
     assert run.plan_result is not None and run.plan_result.display is not None
     assert run.diagnostics()["blocked"] is False
+    assert run.boundary_outcome.profile.food_scope.category_selection.value == "any_of"
+    search_event = next(
+        event
+        for event in run.tool_events
+        if event.tool_name == "search_menu_candidates" and "returned" in event.summary
+    )
+    assert "returned 4 restaurants" in search_event.summary
 
 
 @pytest.mark.asyncio

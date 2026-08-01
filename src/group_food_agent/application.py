@@ -101,7 +101,7 @@ class GroupFoodAgentRun:
                 "error_type": blocker.detail.get("error_type") if blocker else None,
             },
             "reason": reason_code,
-            "corrective_action": "Resolve the reported input issue before planning tools are called.",
+            "corrective_action": "표시된 입력 문제를 해결하면 주문 계산을 다시 시작합니다.",
             "pipeline_event_count": len(self.pipeline_events),
             "tool_event_count": len(self.tool_events),
         }

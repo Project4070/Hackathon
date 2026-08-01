@@ -7,6 +7,7 @@ import inspect
 import io
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, ROUND_FLOOR
@@ -19,6 +20,8 @@ from typing_extensions import Annotated
 from .contracts import (
     Confidence,
     ContractModel,
+    EvidenceStatus,
+    EvidenceV2,
     LocationHintV2,
     LocationSource,
     MealRequestCandidateV2,
@@ -204,6 +207,12 @@ estimate with confidence. Extract additional people and explicit totals only
 from user notes. Explicit, field-specific user corrections override image
 observations and must produce a conflict_resolutions entry. Never trust or copy
 arithmetic: preserve visible, additional, and explicit-total counts separately.
+The embedded MealRequestCandidateV2 must include evidence records for every
+material intake field, especially /party/total_count and /party/groups.
+If the user does not name a desired food, leave requested_categories empty and
+do not create an unresolved issue; deterministic planning will consider every
+eligible source-backed menu. Never assign CUSTOM appetite without an explicit
+numeric stated_servings_milli from user text.
 
 Describe existing food with bounded unit and remaining-ratio ranges. Do not
 invent serving sizes, prices, restaurant identities, ingredients, availability,
@@ -268,16 +277,71 @@ class MultimodalMealRequestInterpreter:
         ) from last_error
 
 
+def _verbatim_total_source(
+    value: MultimodalMealRequestCandidateV1,
+    raw_notes: str | None,
+    expected_count: int,
+) -> str | None:
+    if not raw_notes:
+        return None
+    candidate = value.request_candidate
+    possible_sources = [
+        evidence.source_text
+        for evidence in candidate.evidence
+        if evidence.field_path == "/party/total_count"
+        and evidence.status is EvidenceStatus.EXPLICIT
+        and evidence.source_text
+    ]
+    possible_sources.extend(
+        resolution.source_text
+        for resolution in value.conflict_resolutions
+        if resolution.field_path.endswith("/total_count")
+    )
+    scene_evidence = value.scene_analysis.visible_people_evidence
+    if (
+        scene_evidence is not None
+        and scene_evidence.modality == "user_text"
+        and scene_evidence.status == "explicit"
+        and scene_evidence.source_text
+    ):
+        possible_sources.append(scene_evidence.source_text)
+    for literal in possible_sources:
+        if literal in raw_notes:
+            return literal
+    count_matches = [
+        match
+        for match in re.finditer(r"(?<!\d)(\d{1,3})\s*명", raw_notes)
+        if int(match.group(1)) == expected_count
+    ]
+    return count_matches[0].group(0) if count_matches else None
+
+
 def merge_multimodal_candidate(
     value: MultimodalMealRequestCandidateV1,
     context: MultimodalContextV1,
+    *,
+    raw_notes: str | None = None,
 ) -> MealRequestCandidateV2:
     """Apply deterministic precedence without weakening the existing validator."""
 
     candidate = value.request_candidate
     scene = value.scene_analysis
     issues = list(candidate.unresolved_issues)
-    accepted_total: int | None = scene.explicit_total_people
+    declared_total = scene.explicit_total_people
+    declared_source = _verbatim_total_source(
+        value,
+        raw_notes,
+        declared_total if declared_total is not None else candidate.party.total_count,
+    )
+    candidate_total_source = _verbatim_total_source(
+        value,
+        raw_notes,
+        candidate.party.total_count,
+    )
+    accepted_total: int | None = declared_total if declared_total is not None and declared_source else None
+    if accepted_total is None and declared_total is None and candidate_total_source:
+        accepted_total = candidate.party.total_count
+        declared_source = candidate_total_source
     if accepted_total is None and scene.visible_people is not None:
         source_is_text = bool(
             scene.visible_people_evidence
@@ -302,6 +366,27 @@ def merge_multimodal_candidate(
                 message="사진에서 인원을 신뢰성 있게 확인할 수 없습니다. 최종 참석 인원을 알려 주세요.",
                 source_text=None,
             ))
+    elif accepted_total is None and scene.visible_people is None:
+        issues.append(UnresolvedIssueV2(
+            issue_id="scene_people_unusable",
+            kind=UnresolvedIssueKind.MISSING,
+            field_path="/party/total_count",
+            message="사진에서 인원을 확인할 수 없습니다. 최종 참석 인원을 특별사항에 적어 주세요.",
+            source_text=None,
+        ))
+    if (
+        declared_total is not None
+        and declared_source is None
+        and accepted_total is not None
+        and accepted_total != declared_total
+    ):
+        issues.append(UnresolvedIssueV2(
+            issue_id="scene_explicit_total_unverified",
+            kind=UnresolvedIssueKind.CONFLICTING,
+            field_path="/party/total_count",
+            message="명시된 최종 인원의 원문 근거를 확인할 수 없습니다. 최종 참석 인원을 다시 적어 주세요.",
+            source_text=None,
+        ))
     if accepted_total is not None and candidate.party.total_count != accepted_total:
         # Preserve explicitly restricted groups and put the arithmetic delta in
         # an unrestricted group. If that cannot be done safely, clarification
@@ -337,6 +422,42 @@ def merge_multimodal_candidate(
                 ),
                 source_text=None,
             ))
+    total_evidence = [
+        evidence
+        for evidence in candidate.evidence
+        if evidence.field_path == "/party/total_count"
+        or evidence.field_path.startswith("/party/total_count/")
+    ]
+    if accepted_total is not None and not total_evidence:
+        source_text = declared_source
+        evidence_ids = {evidence.evidence_id for evidence in candidate.evidence}
+        evidence_id = "evidence_scene_total"
+        suffix = 2
+        while evidence_id in evidence_ids:
+            evidence_id = f"evidence_scene_total_{suffix}"
+            suffix += 1
+        start_offset = raw_notes.find(source_text) if raw_notes and source_text else None
+        candidate = candidate.model_copy(update={
+            "evidence": [
+                *candidate.evidence,
+                EvidenceV2(
+                    evidence_id=evidence_id,
+                    field_path="/party/total_count",
+                    source_text=source_text,
+                    status=EvidenceStatus.EXPLICIT if source_text else EvidenceStatus.INFERRED,
+                    confidence=(
+                        1.0 if source_text else scene.visible_people_confidence
+                    ),
+                    start_offset=start_offset,
+                    end_offset=start_offset + len(source_text) if start_offset is not None else None,
+                    note=(
+                        f"Deterministic multimodal merge accepted total_count={accepted_total}; "
+                        f"visible_people={scene.visible_people}; additional_people={scene.additional_people}; "
+                        f"image_id={scene.image_id or 'none'}"
+                    ),
+                ),
+            ]
+        })
     location = candidate.location_hint
     if location is None and context.latitude is not None:
         location = LocationHintV2(
