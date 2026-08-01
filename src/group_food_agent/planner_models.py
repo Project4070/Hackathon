@@ -251,7 +251,6 @@ class NormalizedMenuSetV1(ContractModel):
     profile_revision: Annotated[int, Field(strict=True, ge=1)]
     candidate_menu_set_id: Identifier
     restaurants: Annotated[list[RestaurantV1], Field(min_length=1, max_length=10)]
-    cache_hits: Annotated[int, Field(strict=True, ge=0)]
     model_enrichments: Annotated[int, Field(strict=True, ge=0)]
     warnings: Annotated[list[str], Field(max_length=64)]
 

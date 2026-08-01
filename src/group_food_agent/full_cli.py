@@ -50,7 +50,6 @@ async def _run(args: argparse.Namespace) -> int:
         context,
         interpreter=interpreter,
         live_planner=live_planner,
-        snapshot_id=args.snapshot_id,
         trace_file=trace_file if args.trace else None,
     )
     if run.mode == "live_agents_sdk":
@@ -115,11 +114,6 @@ def main() -> None:
     )
     parser.add_argument("--request-id")
     parser.add_argument("--case-id")
-    parser.add_argument(
-        "--snapshot-id",
-        default="snapshot-sinchon-reviewed-v1",
-        help="Restaurant snapshot identifier; use a missing ID to rehearse a blocked gateway",
-    )
     parser.add_argument(
         "--trace",
         action=argparse.BooleanOptionalAction,

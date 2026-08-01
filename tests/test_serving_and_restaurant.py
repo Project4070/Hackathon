@@ -63,7 +63,6 @@ def test_unknown_allergen_evidence_never_becomes_safe(canonical_candidate, canon
         intake,
         snapshot,
         now=datetime(2026, 8, 2, tzinfo=timezone.utc),
-        maximum_cache_age_seconds=86_400,
         restaurant_limit=10,
     )
     alpha = candidates.restaurants[0]
@@ -82,18 +81,17 @@ def test_unknown_allergen_evidence_never_becomes_safe(canonical_candidate, canon
     assert any("no verified peanut" in reason for reason in row.hard_exclusion_reasons)
 
 
-def test_stale_snapshot_is_labeled_not_silently_fresh(canonical_candidate, canonical_raw_text):
+def test_direct_source_does_not_apply_cache_age(canonical_candidate, canonical_raw_text):
     intake = _intake(canonical_candidate, canonical_raw_text)
     snapshot = load_restaurant_snapshot()
     candidates = search_menu_candidates(
         intake,
         snapshot,
         now=snapshot.crawled_at + timedelta(days=2),
-        maximum_cache_age_seconds=86_400,
         restaurant_limit=10,
     )
-    assert candidates.freshness is FreshnessStatus.STALE
-    assert any("stale" in warning for warning in candidates.warnings)
+    assert candidates.freshness is FreshnessStatus.FRESH
+    assert any("no cache was used" in warning for warning in candidates.warnings)
 
 
 def test_partial_snapshot_is_labeled_and_missing_fields_are_not_filled(
@@ -107,7 +105,6 @@ def test_partial_snapshot_is_labeled_and_missing_fields_are_not_filled(
         intake,
         snapshot,
         now=datetime(2026, 8, 2, tzinfo=timezone.utc),
-        maximum_cache_age_seconds=86_400,
         restaurant_limit=10,
     )
 
@@ -156,6 +153,5 @@ def test_restaurants_without_verified_delivery_area_are_excluded(
             changed,
             load_restaurant_snapshot(),
             now=datetime(2026, 8, 2, tzinfo=timezone.utc),
-            maximum_cache_age_seconds=86_400,
             restaurant_limit=10,
         )

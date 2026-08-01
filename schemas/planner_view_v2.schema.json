@@ -71,20 +71,6 @@
       ],
       "title": "Maximum Budget Minor"
     },
-    "snapshot_id": {
-      "anyOf": [
-        {
-          "maxLength": 128,
-          "minLength": 1,
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "title": "Snapshot Id"
-    },
     "policy_ids": {
       "items": {
         "maxLength": 100,
@@ -107,7 +93,6 @@
     "hard_requirement_ids",
     "risk_preference",
     "maximum_budget_minor",
-    "snapshot_id",
     "policy_ids"
   ],
   "title": "PlannerViewV2",

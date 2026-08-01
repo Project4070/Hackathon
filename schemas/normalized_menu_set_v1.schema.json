@@ -530,11 +530,6 @@
       "title": "Restaurants",
       "type": "array"
     },
-    "cache_hits": {
-      "minimum": 0,
-      "title": "Cache Hits",
-      "type": "integer"
-    },
     "model_enrichments": {
       "minimum": 0,
       "title": "Model Enrichments",
@@ -554,7 +549,6 @@
     "profile_revision",
     "candidate_menu_set_id",
     "restaurants",
-    "cache_hits",
     "model_enrichments",
     "warnings"
   ],

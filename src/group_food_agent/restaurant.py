@@ -1,4 +1,4 @@
-"""G5 reviewed-snapshot lookup, semantic-cache validation, and hard eligibility."""
+"""G5 direct restaurant-source lookup, semantic validation, and eligibility."""
 
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ from .contracts import (
 from .planner_models import (
     AvailabilityStatus,
     CandidateMenuSetV1,
-    DataMode,
     EligibleMenuSetV1,
     EligibleRestaurantV1,
     FreshnessStatus,
@@ -30,9 +29,6 @@ from .planner_models import (
     SpiceLevel,
     VegetarianStatus,
 )
-
-SUPPORTED_PLANNER_CATEGORY_CODES = frozenset({"chicken", "pizza"})
-
 
 def default_snapshot_path() -> Path:
     return Path(__file__).resolve().parents[2] / "fixtures" / "restaurant_snapshot_sinchon_v1.json"
@@ -83,36 +79,23 @@ def _delivery_is_verified(intake: PlanningIntakeV2, restaurant) -> bool:
 
 def search_menu_candidates(
     intake: PlanningIntakeV2,
-    snapshot: RestaurantSnapshotV1,
+    source: RestaurantSnapshotV1,
     *,
     now: datetime,
-    maximum_cache_age_seconds: int,
     restaurant_limit: int,
     unavailable_restaurant_ids: set[str] | None = None,
     unavailable_menu_item_ids: set[str] | None = None,
 ) -> CandidateMenuSetV1:
-    """Query the cache first and return only source-backed requested categories."""
+    """Query the direct source for any requested source-backed category."""
 
     unavailable_restaurants = unavailable_restaurant_ids or set()
     unavailable_items = unavailable_menu_item_ids or set()
-    age_seconds = max(0, int((now - snapshot.crawled_at).total_seconds()))
-    freshness = (
-        FreshnessStatus.FRESH
-        if age_seconds <= maximum_cache_age_seconds
-        else FreshnessStatus.STALE
-    )
     requested_categories = {term.code for term in intake.profile.food_scope.requested_categories}
-    unsupported_categories = requested_categories - SUPPORTED_PLANNER_CATEGORY_CODES
-    if unsupported_categories:
-        raise LookupError(
-            "planner capability unavailable for requested food categories: "
-            + ", ".join(sorted(unsupported_categories))
-        )
     excluded_restaurant_names = {
         name.casefold() for name in intake.profile.restaurant_preferences.excluded_names
     }
     restaurants = []
-    for restaurant in snapshot.restaurants:
+    for restaurant in source.restaurants:
         if restaurant.restaurant_id in unavailable_restaurants:
             continue
         if restaurant.name.casefold() in excluded_restaurant_names:
@@ -138,25 +121,22 @@ def search_menu_candidates(
         if len(restaurants) >= restaurant_limit:
             break
     if not restaurants:
-        raise LookupError("no source-backed restaurant candidates are available")
-
-    warnings = list(snapshot.warnings)
-    if snapshot.completeness.value == "partial":
-        warnings.append("restaurant snapshot is partial; missing fields were not invented")
-    data_mode = snapshot.data_mode
-    if freshness is FreshnessStatus.STALE:
-        warnings.append(
-            f"last successful snapshot is stale ({age_seconds} seconds old); bounded refresh was unavailable"
+        location = intake.profile.location_requirement.query or "provided coordinates"
+        raise LookupError(
+            "no source-backed restaurant candidates are available for requested categories: "
+            f"{', '.join(sorted(requested_categories))}; location: {location}"
         )
-        if data_mode not in {DataMode.SIMULATED_REVIEWED_FIXTURE}:
-            data_mode = DataMode.STALE_CACHE
+
+    warnings = [*source.warnings, "restaurant data was read from the direct configured source; no cache was used"]
+    if source.completeness.value == "partial":
+        warnings.append("restaurant snapshot is partial; missing fields were not invented")
     return CandidateMenuSetV1(
         case_id=intake.case_id,
         profile_revision=intake.profile_revision,
-        snapshot_id=snapshot.snapshot_id,
-        freshness=freshness,
-        completeness=snapshot.completeness,
-        data_mode=data_mode,
+        snapshot_id=source.snapshot_id,
+        freshness=FreshnessStatus.FRESH,
+        completeness=source.completeness,
+        data_mode=source.data_mode,
         restaurants=restaurants,
         warnings=warnings,
     )
@@ -167,27 +147,22 @@ def enrich_menu_semantics(
     *,
     candidate_menu_set_id: str,
 ) -> NormalizedMenuSetV1:
-    """Use reviewed cached semantics; never synthesize missing hard facts.
+    """Validate reviewed source semantics; never synthesize missing hard facts.
 
-    Every fixture item already contains provenance-bearing normalized fields.
-    A live enrichment agent may populate a future cache, but this stage accepts a
-    cache hit only when original text and provenance hashes are present.
+    Every source item already contains provenance-bearing normalized fields.
     """
 
-    cache_hits = 0
     warnings = list(candidates.warnings)
     for restaurant in candidates.restaurants:
         for item in restaurant.menu_items:
             sanitize_visible_text(item.original_text)
             if not item.semantic_provenance.source_content_hash:
                 raise ValueError(f"menu item {item.menu_item_id} lacks semantic provenance")
-            cache_hits += 1
     return NormalizedMenuSetV1(
         case_id=candidates.case_id,
         profile_revision=candidates.profile_revision,
         candidate_menu_set_id=candidate_menu_set_id,
         restaurants=candidates.restaurants,
-        cache_hits=cache_hits,
         model_enrichments=0,
         warnings=warnings,
     )

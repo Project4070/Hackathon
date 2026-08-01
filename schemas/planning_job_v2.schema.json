@@ -844,20 +844,6 @@
         "resolved_location": {
           "$ref": "#/$defs/ResolvedLocationV2"
         },
-        "restaurant_snapshot_id": {
-          "anyOf": [
-            {
-              "maxLength": 128,
-              "minLength": 1,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Restaurant Snapshot Id"
-        },
         "trace_id": {
           "maxLength": 128,
           "minLength": 1,
@@ -869,7 +855,6 @@
       "required": [
         "requested_at",
         "resolved_location",
-        "restaurant_snapshot_id",
         "trace_id"
       ],
       "title": "PlannerExecutionContextV2",
@@ -1344,24 +1329,12 @@
         "delivery_required": {
           "title": "Delivery Required",
           "type": "boolean"
-        },
-        "allow_bounded_refresh": {
-          "title": "Allow Bounded Refresh",
-          "type": "boolean"
-        },
-        "maximum_cache_age_seconds": {
-          "maximum": 604800,
-          "minimum": 0,
-          "title": "Maximum Cache Age Seconds",
-          "type": "integer"
         }
       },
       "required": [
         "policy_id",
         "restaurant_limit",
-        "delivery_required",
-        "allow_bounded_refresh",
-        "maximum_cache_age_seconds"
+        "delivery_required"
       ],
       "title": "RestaurantSearchPolicyV2",
       "type": "object"

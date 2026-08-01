@@ -52,7 +52,6 @@ from .stores import (
     EvidenceStore,
     PlanningCaseStore,
     PolicyRegistry,
-    RestaurantSnapshotCache,
     ToolEventStore,
     system_clock,
 )
@@ -75,24 +74,24 @@ class PlanningService:
         self,
         *,
         clock: Clock = system_clock,
-        snapshot: RestaurantSnapshotV1 | None = None,
-        load_default_snapshot: bool = True,
+        restaurant_source: RestaurantSnapshotV1 | None = None,
+        load_default_source: bool = True,
         trace_writer: JsonlTraceWriter | None = None,
     ) -> None:
         self.clock = clock
         self.artifacts = ArtifactStore(clock)
         self.cases = PlanningCaseStore()
-        self.snapshots = RestaurantSnapshotCache()
+        self.restaurant_source = restaurant_source or (
+            load_restaurant_snapshot() if load_default_source else None
+        )
         self.evidence = EvidenceStore()
         self.policies = PolicyRegistry()
         self.events = ToolEventStore()
         self.trace_writer = trace_writer
         self._event_sequence = 0
         self._last_failed_call_ids: dict[tuple[str, str], str] = {}
-        loaded_snapshot = snapshot or (load_restaurant_snapshot() if load_default_snapshot else None)
-        if loaded_snapshot is not None:
-            self.snapshots.put(loaded_snapshot)
-            for restaurant in loaded_snapshot.restaurants:
+        if self.restaurant_source is not None:
+            for restaurant in self.restaurant_source.restaurants:
                 for item in restaurant.menu_items:
                     self.evidence.put(item.serving_evidence.evidence_id, item.serving_evidence)
 
@@ -123,7 +122,6 @@ class PlanningService:
             ],
             risk_preference=intake.profile.quantity_preference.primary_objective.value,
             maximum_budget_minor=intake.profile.budget.maximum_amount_minor,
-            snapshot_id=job.execution_context.restaurant_snapshot_id,
             policy_ids=[
                 policy.serving_policy.serving_policy_id,
                 policy.serving_policy.quantity_policy_id,
@@ -279,16 +277,12 @@ class PlanningService:
         job = state.job
 
         def operation() -> object:
-            snapshot = (
-                self.snapshots.get(job.execution_context.restaurant_snapshot_id)
-                if job.execution_context.restaurant_snapshot_id
-                else self.snapshots.latest()
-            )
+            if self.restaurant_source is None:
+                raise LookupError("restaurant source unavailable")
             return search_menu_candidates(
                 job.intake,
-                snapshot,
+                self.restaurant_source,
                 now=self.clock(),
-                maximum_cache_age_seconds=job.runtime_policy.restaurant_search.maximum_cache_age_seconds,
                 restaurant_limit=job.runtime_policy.restaurant_search.restaurant_limit,
                 unavailable_restaurant_ids=state.unavailable_restaurant_ids,
                 unavailable_menu_item_ids=state.unavailable_menu_item_ids,
@@ -301,7 +295,7 @@ class PlanningService:
             "candidate_menu_set",
             operation,
             lambda value: (
-                f"cache lookup returned {len(value.restaurants)} restaurants; "  # type: ignore[attr-defined]
+                f"direct source lookup returned {len(value.restaurants)} restaurants; "  # type: ignore[attr-defined]
                 f"freshness={value.freshness.value}, data_mode={value.data_mode.value}"  # type: ignore[attr-defined]
             ),
         )
@@ -320,7 +314,7 @@ class PlanningService:
             "normalized_menu_set",
             operation,
             lambda value: (
-                f"validated {value.cache_hits} provenance-bearing semantic cache hits; "  # type: ignore[attr-defined]
+                f"validated source-backed semantic provenance; "
                 f"model calls={value.model_enrichments}"  # type: ignore[attr-defined]
             ),
             input_ids=[candidate_menu_set_id],
@@ -454,12 +448,13 @@ class PlanningService:
             ranked = self.artifacts.get(ranked_plan_set_id, RankedPlanSetV1)
             serving = self.artifacts.get(serving_requirement_id, ServingRequirementV1)
             candidates = self.artifacts.get(candidate_menu_set_id, CandidateMenuSetV1)
-            snapshot = self.snapshots.get(candidates.snapshot_id)  # type: ignore[attr-defined]
+            if self.restaurant_source is None:
+                raise LookupError("restaurant source unavailable")
             return get_plan_for_presentation(
                 state.job.intake,
                 serving,  # type: ignore[arg-type]
                 ranked,  # type: ignore[arg-type]
-                snapshot,
+                self.restaurant_source,
                 freshness=candidates.freshness,  # type: ignore[attr-defined]
                 data_mode=candidates.data_mode,  # type: ignore[attr-defined]
             )
@@ -480,16 +475,14 @@ class PlanningService:
     def _failure(self, case_id: str, status: str, reason: str) -> PlanRunResult:
         state = self.cases.get(case_id)
         corrective_action = (
-            "Choose a food category with a planner data adapter, or add a reviewed menu snapshot for this category."
-            if status == "unsupported"
-            else "Change the named constraint or provide a usable reviewed restaurant snapshot."
+            "Provide source-backed restaurant, menu, price, and practical-serving data for the requested category and location."
         )
         failure = PlanningFailureV1(
             case_id=case_id,
             profile_revision=state.job.intake.profile_revision,
             status=status,
             problematic_field="/planning",
-            received_value="validated planning job and current cache state",
+            received_value="validated planning job and direct restaurant source state",
             reason=reason[:500],
             corrective_action=corrective_action,
             compromises=[
@@ -568,10 +561,8 @@ class PlanningService:
         except LookupError as exc:
             reason = str(exc)
             status = (
-                "unsupported"
-                if reason.startswith("planner capability unavailable")
-                else "data_unavailable"
-                if "snapshot" in reason or "source-backed" in reason
+                "data_unavailable"
+                if "source" in reason or "source-backed" in reason
                 else "no_valid_plan"
             )
             return self._failure(case_id, status, reason)
@@ -601,33 +592,29 @@ class PlanningService:
             return PlanRunResult(display, None, display_ref.ref.artifact_id, None)  # type: ignore[arg-type]
         except LookupError as exc:
             reason = str(exc)
-            status = "unsupported" if reason.startswith("planner capability unavailable") else "no_valid_plan"
+            status = "data_unavailable" if "source" in reason else "no_valid_plan"
             return self._failure(case_id, status, reason)
 
     def replan_restaurant_unavailable(self, case_id: str, restaurant_id: str) -> PlanRunResult:
         """Rerun from stage 5; serving demand is reused, not copied between restaurants."""
 
         state = self.cases.get(case_id)
-        snapshot = (
-            self.snapshots.get(state.job.execution_context.restaurant_snapshot_id)
-            if state.job.execution_context.restaurant_snapshot_id
-            else self.snapshots.latest()
-        )
-        if restaurant_id not in {restaurant.restaurant_id for restaurant in snapshot.restaurants}:
+        if self.restaurant_source is None:
+            raise LookupError("restaurant source unavailable")
+        if restaurant_id not in {
+            restaurant.restaurant_id for restaurant in self.restaurant_source.restaurants
+        }:
             raise KeyError(f"unknown restaurant id: {restaurant_id}")
         state.unavailable_restaurant_ids.add(restaurant_id)
         return self._replan_from_stage_five(case_id)
 
     def replan_menu_unavailable(self, case_id: str, menu_item_id: str) -> PlanRunResult:
         state = self.cases.get(case_id)
-        snapshot = (
-            self.snapshots.get(state.job.execution_context.restaurant_snapshot_id)
-            if state.job.execution_context.restaurant_snapshot_id
-            else self.snapshots.latest()
-        )
+        if self.restaurant_source is None:
+            raise LookupError("restaurant source unavailable")
         if menu_item_id not in {
             item.menu_item_id
-            for restaurant in snapshot.restaurants
+            for restaurant in self.restaurant_source.restaurants
             for item in restaurant.menu_items
         }:
             raise KeyError(f"unknown menu item id: {menu_item_id}")

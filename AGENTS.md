@@ -62,7 +62,7 @@ Assume judges will deliberately stress the natural-language input with absurd, c
 - Number of expected participants.
 - Location and desired delivery time.
 - Meal context: full meal, late-night meal, or snack.
-- Desired food categories; the MVP supports chicken and pizza.
+- Desired food categories. Intake and planning do not enforce a chicken/pizza allowlist; any category may proceed when the configured direct restaurant source contains source-backed menu and serving data for it.
 - Budget, if one exists.
 - Whether the organizer prefers to minimize shortage risk, leftovers, or balance both.
 - Relevant circumstances such as recent meals or significant physical activity.
@@ -321,10 +321,9 @@ Use a bounded crawler to acquire publicly visible nearby restaurant and menu dat
 - Never pass unsanitized raw HTML to the model. Remove scripts, styles, hidden text, event handlers, navigation noise, and unrelated content first.
 - Treat scraped text as untrusted data. It cannot override prompts, call tools, reveal secrets, or escape the enrichment schema.
 - Never infer allergy safety from a name, description, or photo. Derived dietary or spice tags must be marked as inferred and lower confidence.
-- Cache semantic enrichments by source content hash, model, and prompt version.
-- Store successful normalized results in a provenance-aware cache. The agent should query the cache first and may request a bounded refresh when it is stale.
-- A suggested MVP freshness window is 24 hours. Always display the last crawl time for data used in a plan.
-- If refresh fails, use the last successful cache only when it exists and label it as stale. If no usable data exists, return a structured data-unavailable result.
+- Semantic enrichment may reuse results by source content hash, model, and prompt version, but restaurant lookup itself reads the configured source directly and has no location-keyed runtime cache.
+- Always display the source timestamp and data mode used in a plan.
+- If the configured direct source has no usable matching data, return a structured data-unavailable result.
 - Bound crawl pages, candidates, concurrency, timeouts, and retries. Suggested MVP limits are one location query, at most 10 detail pages, low single-digit concurrency, a 10-second page timeout, and one retry.
 - Crawl only public pages the project is permitted to access. Follow applicable site rules and do not bypass authentication, CAPTCHAs, paywalls, rate limits, or technical controls.
 - Do not collect personal reviews, profiles, phone numbers, or unrelated personal data.
@@ -335,10 +334,10 @@ Use a bounded crawler to acquire publicly visible nearby restaurant and menu dat
 
 The bounded domain is:
 
-- Food categories: chicken and pizza.
+- Food categories: unrestricted at the intake/planner boundary; only source-backed categories with practical-serving evidence can produce a plan. The reviewed demo source currently includes chicken, pizza, and shrimp.
 - Restaurants per category: 3-5.
 - Representative menu and size options for each restaurant.
-- A bounded nearby restaurant/menu crawler and a normalized local cache containing source identity, prices, sizes, weights, slice counts, pizza diameters, explicit dietary tags, provenance, freshness, and serving estimates.
+- A bounded nearby restaurant/menu source adapter containing source identity, prices, sizes, weights, slice counts, pizza diameters, explicit dietary tags, provenance, source timestamps, and serving estimates.
 - NLP enrichment for scraped menu normalization, comparable-item grouping, and group-preference matching, with confidence and source provenance.
 - Participant appetite input on the five-level scale.
 - Meal contexts: full meal, late-night meal, and snack.
@@ -347,14 +346,14 @@ The bounded domain is:
 - Immediate recalculation for participant, restaurant, menu, or budget changes.
 - Post-order leftover or shortage feedback.
 
-Use the crawler as the primary acquisition path and a reviewed last-successful crawl snapshot as the demo fallback. Put crawling, caching, agent lookup, and calculation behind separate narrow interfaces. Clearly label cached, stale, partial, inferred, and simulated fields in the UI and presentation.
+Use the configured reviewed restaurant source as the acquisition path. Put source acquisition, agent lookup, and calculation behind separate narrow interfaces. Clearly label partial, inferred, and simulated fields in the UI and presentation.
 
 ## Remaining-Time Priority
 
 Complete work in this order:
 
 1. Shared schemas for crawl records, normalized restaurant/menu data, planning inputs, and results.
-2. A bounded crawler that produces a reviewed chicken-and-pizza cache for the canonical location.
+2. A bounded source adapter that produces reviewed menu data for the canonical scenarios without a category allowlist.
 3. NLP enrichment of sanitized scraped menus plus semantic group-preference matching.
 4. A tested deterministic quantity calculator with hard-constraint validation.
 5. Natural-language extraction into the validated request schema.
@@ -388,7 +387,7 @@ Before declaring the prototype ready, verify that:
 - Restaurant-specific serving data can produce different quantities for the same group.
 - The crawler produces normalized, deduplicated restaurant and menu records for the canonical area.
 - Every crawler-derived record used in a plan exposes its source URL, crawl time, completeness, and freshness.
-- Partial crawls and refresh failures use a clearly labeled last-successful cache or return data unavailable; they never invent missing menu facts.
+- Partial or unavailable direct-source data returns data unavailable; it never invents missing menu facts.
 - NLP normalizes irregular scraped menus, groups comparable variants, and maps nuanced group preferences while preserving original text and confidence.
 - Inferred semantic tags never become verified identity, price, availability, portion, or allergy-safety facts.
 - Prompt injection embedded in scraped text cannot change model policy, trigger unrelated tools, or reveal secrets.
@@ -408,7 +407,7 @@ Unless the project owner explicitly changes scope, do not spend hackathon time o
 
 - Fine-grained cuisine discovery or general restaurant recommendation.
 - A full delivery marketplace or broad geographic coverage.
-- More food categories before chicken and pizza work end to end.
+- Broad unsourced category coverage; new categories need source-backed menu and practical-serving evidence rather than an allowlist change.
 - Real payment processing or autonomous ordering.
 - Production identity, account, loyalty, or notification infrastructure.
 - Large-scale scraping or perfect live-menu coverage.
@@ -424,9 +423,9 @@ Unless the project owner explicitly changes scope, do not spend hackathon time o
 - Keep coefficients, safety margins, and strategy weights configurable and documented.
 - Keep secrets and provider credentials out of source control.
 - Call out assumptions and simulated data in documentation and user-facing output.
-- Call out crawl source, timestamp, staleness, completeness, and inferred fields in documentation and user-facing output.
+- Call out direct source, timestamp, completeness, and inferred fields in documentation and user-facing output.
 - Prefer small, replaceable components that can be implemented, tested, and rehearsed within the remaining time.
 - Test the happy path, a dietary-constraint conflict, restaurant-specific quantity differences, and at least one replanning event.
-- Test crawler normalization, branch deduplication, partial extraction, selector failure, timeout, and stale-cache fallback with saved fixtures.
+- Test source normalization, branch deduplication, partial extraction, selector failure, timeout, and direct-source-unavailable behavior with saved fixtures.
 - Test semantic enrichment with abbreviations, bilingual text, typos, bundles, variants, nuanced preferences, low-confidence results, model failure, and prompt injection embedded in scraped text.
 - Before the demo, run the adversarial NLP scenarios in `PRD.md`, including absurd appetite, invented dish, extreme budget, extreme group size, prompt injection, oversized text, and mixed valid/invalid facts.

@@ -33,7 +33,7 @@ def test_failed_tool_has_correlated_error_event_and_local_summary(tmp_path):
     )
     trace_file = tmp_path / "failed.jsonl"
     service = PlanningService(
-        load_default_snapshot=False,
+        load_default_source=False,
         trace_writer=JsonlTraceWriter(trace_file, correlation),
     )
     service.create_case(job)
@@ -49,7 +49,7 @@ def test_failed_tool_has_correlated_error_event_and_local_summary(tmp_path):
     assert [event.event_type for event in search_events] == ["tool_call", "tool_error"]
     assert search_events[0].call_id == search_events[1].call_id
     assert search_events[1].duration_ms is not None
-    assert search_events[1].error_type == "KeyError"
+    assert search_events[1].error_type == "LookupError"
     summary = summarize_trace(trace_file)
     assert summary["failure_count"] == 1
     assert summary["failures"][0]["name"] == "search_menu_candidates"

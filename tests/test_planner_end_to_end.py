@@ -23,7 +23,7 @@ def test_golden_planning_job_fixture_is_contract_valid():
 
     assert job.intake.status == "ready_for_planning"
     assert job.intake.profile.party.total_count == 15
-    assert job.execution_context.restaurant_snapshot_id == "snapshot-sinchon-reviewed-v1"
+    assert job.execution_context.resolved_location.query == "연세대학교 정문"
 
 
 @pytest.fixture
@@ -38,7 +38,6 @@ def planning_service(canonical_candidate, canonical_raw_text):
         intake,
         requested_at=NOW,
         trace_id="trace-plan",
-        snapshot_id="snapshot-sinchon-reviewed-v1",
     )
     service = PlanningService(clock=lambda: NOW)
     service.create_case(job)
@@ -139,9 +138,9 @@ def test_unknown_replan_targets_are_rejected(planning_service):
         planning_service.replan_menu_unavailable("case-plan", "made-up-menu")
 
 
-def test_missing_restaurant_cache_returns_data_unavailable(planning_service):
+def test_missing_restaurant_source_returns_data_unavailable(planning_service):
     job = planning_service.cases.get("case-plan").job
-    empty = PlanningService(clock=lambda: NOW, load_default_snapshot=False)
+    empty = PlanningService(clock=lambda: NOW, load_default_source=False)
     empty.create_case(job)
 
     result = empty.plan_case("case-plan")

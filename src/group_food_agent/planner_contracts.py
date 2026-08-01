@@ -58,8 +58,6 @@ class RestaurantSearchPolicyV2(ContractModel):
     policy_id: PolicyId
     restaurant_limit: Annotated[int, Field(strict=True, ge=1, le=10)]
     delivery_required: bool
-    allow_bounded_refresh: bool
-    maximum_cache_age_seconds: Annotated[int, Field(strict=True, ge=0, le=604_800)]
 
 
 class MenuFilterPolicyV2(ContractModel):
@@ -130,7 +128,6 @@ class ResolvedLocationV2(ContractModel):
 class PlannerExecutionContextV2(ContractModel):
     requested_at: AwareDatetime
     resolved_location: ResolvedLocationV2
-    restaurant_snapshot_id: Identifier | None
     trace_id: Identifier
 
 
@@ -170,7 +167,6 @@ class PlannerViewV2(ContractModel):
     hard_requirement_ids: Annotated[list[Identifier], Field(max_length=100)]
     risk_preference: Annotated[str, StringConstraints(min_length=1, max_length=50)]
     maximum_budget_minor: Annotated[int, Field(strict=True, ge=0)] | None
-    snapshot_id: Identifier | None
     policy_ids: Annotated[list[PolicyId], Field(min_length=6, max_length=8)]
 
 
@@ -190,8 +186,6 @@ def default_runtime_policy() -> PlannerRuntimePolicyV2:
             policy_id="restaurant-search-v1",
             restaurant_limit=10,
             delivery_required=True,
-            allow_bounded_refresh=True,
-            maximum_cache_age_seconds=86_400,
         ),
         menu_filter=MenuFilterPolicyV2(
             policy_id="menu-filter-v1",

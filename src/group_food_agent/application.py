@@ -115,7 +115,6 @@ async def run_group_food_agent(
     admission_policy: AdmissionPolicyV2 | None = None,
     service: PlanningService | None = None,
     live_planner: bool = True,
-    snapshot_id: str = "snapshot-sinchon-reviewed-v1",
     trace_file: str | Path | None = None,
 ) -> GroupFoodAgentRun:
     """Run preflight, Interpreter Agent, validation, and the full planner.
@@ -201,7 +200,6 @@ async def run_group_food_agent(
             boundary,
             requested_at=utc_now(),
             trace_id=correlation.logical_trace_id,
-            snapshot_id=snapshot_id,
         )
         planner.create_case(job)
         if live_planner:

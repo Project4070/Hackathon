@@ -48,9 +48,9 @@ three-strategy tradeoff, and source/freshness uncertainty. Never describe the
 synthetic reviewed fixture as live restaurant data.
 If any tool returns artifact_type=planning_failure, stop immediately, copy that
 exact ID into failure_artifact_id, set display_artifact_id to null, and explain
-the smallest stated corrective action. An `unsupported` failure is a normal
-capability result after the planner has run; never drop the requested category,
-invent menu facts, or silently substitute another food.
+the smallest stated corrective action. Never drop the requested category,
+invent menu facts, or silently substitute another food when the direct source
+has no matching records.
 """.strip()
 
 

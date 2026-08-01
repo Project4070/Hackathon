@@ -13,6 +13,7 @@ from typing import Iterable
 from pydantic import AwareDatetime, Field
 
 from .contracts import (
+    ActivityContext,
     AssumptionV2,
     AppetiteBand,
     BudgetIntentType,
@@ -23,9 +24,11 @@ from .contracts import (
     CostScopeV2,
     EvidenceStatus,
     FoodScopeV2,
+    FoodRole,
     IssueSeverity,
     LocationRequirementV2,
     LocationSource,
+    MealType,
     MealRequestCandidateV2,
     PlanningBoundaryOutcomeV2,
     PlanningIntakeV2,
@@ -36,6 +39,7 @@ from .contracts import (
     RestrictionDisclosureStatus,
     RiskPreference,
     SemanticNamespace,
+    ServiceStyle,
     ToleranceLevel,
     UnresolvedIssueKind,
     ValidatedMealProfileV2,
@@ -97,6 +101,10 @@ class AdmissionPolicyV2(ContractModel):
     default_shortage_tolerance: ToleranceLevel = ToleranceLevel.NORMAL
     default_leftover_tolerance: ToleranceLevel = ToleranceLevel.NORMAL
     default_restaurant_mixing: RestaurantMixing = RestaurantMixing.SINGLE_RESTAURANT_PREFERRED
+    default_meal_type: MealType = MealType.DINNER
+    default_service_style: ServiceStyle = ServiceStyle.FULL_MEAL
+    default_activity_context: ActivityContext = ActivityContext.ORDINARY
+    default_food_role: FoodRole = FoodRole.PRIMARY_MEAL
 
 
 class ValidationContextV2(ContractModel):
@@ -456,6 +464,22 @@ def validate_planning_profile(
     assumptions: list[AssumptionV2] = []
 
     party = candidate.party
+    if any(
+        evidence.status is EvidenceStatus.DEFAULTED
+        and (
+            evidence.field_path == "/party/groups"
+            or evidence.field_path.startswith("/party/groups/")
+        )
+        for evidence in candidate.evidence
+    ):
+        assumptions.append(
+            _assumption(
+                "default_participant_group_applied",
+                "/profile/party/groups",
+                f"{party.total_count} attendees at normal appetite",
+                "Only total attendance was stated; application policy created one normal-appetite cohort.",
+            )
+        )
     if not policy.minimum_group_size <= party.total_count <= policy.maximum_group_size:
         fatal.append(
             _contract_issue(
@@ -707,6 +731,27 @@ def validate_planning_profile(
     budget = _resolve_budget(candidate, party.total_count, policy, fatal, blockers, assumptions)
     quantity_preference = _resolve_quantity_preference(candidate, policy, assumptions)
 
+    occasion = candidate.occasion
+    occasion_updates: dict[str, object] = {}
+    if occasion.meal_type is MealType.OTHER:
+        occasion_updates["meal_type"] = policy.default_meal_type
+    if occasion.service_style is ServiceStyle.OTHER:
+        occasion_updates["service_style"] = policy.default_service_style
+    if occasion.activity_context is ActivityContext.OTHER:
+        occasion_updates["activity_context"] = policy.default_activity_context
+    if occasion.food_role is FoodRole.OTHER:
+        occasion_updates["food_role"] = policy.default_food_role
+    if occasion_updates:
+        occasion = occasion.model_copy(update=occasion_updates)
+        assumptions.append(
+            _assumption(
+                "default_meal_context_applied",
+                "/profile/occasion",
+                ",".join(f"{name}={value.value}" for name, value in occasion_updates.items()),
+                "Meal context was not stated; application policy supplied full-meal dinner defaults.",
+            )
+        )
+
     if candidate.restriction_disclosure.status is RestrictionDisclosureStatus.NOT_PROVIDED:
         warnings.append(
             _contract_issue(
@@ -748,7 +793,7 @@ def validate_planning_profile(
 
     profile = ValidatedMealProfileV2(
         locale=candidate.locale,
-        occasion=candidate.occasion,
+        occasion=occasion,
         party=candidate.party,
         location_requirement=location,
         food_scope=food_scope,

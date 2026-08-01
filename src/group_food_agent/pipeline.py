@@ -25,6 +25,7 @@ from .preflight import (
     RawInputLimits,
     preflight_raw_input,
 )
+from .intake_normalization import normalize_candidate_for_validation
 from .validation import (
     AdmissionPolicyV2,
     ValidationContextV2,
@@ -217,6 +218,8 @@ async def process_meal_request(
             },
         ),
     )
+
+    candidate = normalize_candidate_for_validation(candidate, raw_text)
 
     upstream_warnings = [
         _preflight_issue_to_contract(issue)

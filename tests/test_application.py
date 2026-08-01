@@ -4,6 +4,7 @@ import pytest
 
 from group_food_agent.application import run_group_food_agent
 from group_food_agent.contracts import (
+    MealRequestCandidateV2,
     SemanticNamespace,
     SemanticTermV2,
     UnresolvedIssueKind,
@@ -93,7 +94,7 @@ async def test_deterministic_gateway_block_is_printable_and_structured(
         canonical_raw_text,
         ValidationContextV2(request_id="request-gateway", case_id="case-gateway"),
         interpreter=FixedInterpreter(canonical_candidate),
-        service=PlanningService(load_default_snapshot=False),
+        service=PlanningService(load_default_source=False),
         live_planner=False,
     )
 
@@ -102,7 +103,7 @@ async def test_deterministic_gateway_block_is_printable_and_structured(
     assert diagnostics["blocked"] is True
     assert diagnostics["blocked_at"]["source"] == "deterministic_gateway"
     assert diagnostics["blocked_at"]["tool_name"] == "search_menu_candidates"
-    assert diagnostics["blocked_at"]["error_type"] == "KeyError"
+    assert diagnostics["blocked_at"]["error_type"] == "LookupError"
 
 
 @pytest.mark.asyncio
@@ -137,7 +138,7 @@ async def test_boundary_diagnostics_preserve_validation_reason_and_stage(
 
 
 @pytest.mark.asyncio
-async def test_unlisted_food_category_runs_planner_and_returns_capability_failure(
+async def test_unlisted_food_category_reaches_direct_source_lookup(
     canonical_candidate, canonical_raw_text
 ):
     rice = SemanticTermV2(
@@ -157,7 +158,7 @@ async def test_unlisted_food_category_runs_planner_and_returns_capability_failur
 
     assert run.boundary_outcome.status == "ready_for_planning"
     assert run.plan_result is not None and run.plan_result.failure is not None
-    assert run.plan_result.failure.status == "unsupported"
+    assert run.plan_result.failure.status == "data_unavailable"
     assert "rice" in run.plan_result.failure.reason
     assert any(event.tool_name == "build_serving_input" for event in run.tool_events)
     assert any(event.tool_name == "search_menu_candidates" for event in run.tool_events)
@@ -190,3 +191,130 @@ async def test_unlisted_allergen_reaches_planner_without_becoming_safe(
     assert run.plan_result is not None and run.plan_result.failure is not None
     assert run.plan_result.failure.status == "no_valid_plan"
     assert any(event.tool_name == "apply_hard_eligibility" for event in run.tool_events)
+
+
+@pytest.mark.asyncio
+async def test_terse_korean_shrimp_request_runs_end_to_end(canonical_candidate):
+    raw = "먹고 싶은 거:shrimp 인원:20명 예산:20만원 장소:신논현역"
+    payload = canonical_candidate.model_dump(mode="json")
+    payload.update(
+        {
+            "occasion": {
+                "meal_type": "other",
+                "service_style": "other",
+                "activity_context": "other",
+                "food_role": "other",
+                "leftover_storage": "unknown",
+                "scheduled_at": None,
+                "duration_minutes": None,
+            },
+            "party": {
+                "total_count": 20,
+                "groups": [
+                    {
+                        "group_id": "group_default",
+                        "display_label": "all attendees",
+                        "count": 20,
+                        "attendance_status": "confirmed",
+                        "appetite": {"band": "normal", "stated_servings_milli": None},
+                        "activity_level": "unknown",
+                        "recent_meal_status": "unknown",
+                    }
+                ],
+            },
+            "location_hint": {
+                "source": "user_text",
+                "query": "신논현역",
+                "latitude": None,
+                "longitude": None,
+            },
+            "food_scope": {
+                "requested_categories": [
+                    {"namespace": "food_category", "code": "shrimp", "label": "shrimp"}
+                ],
+                "category_selection": "include_all",
+                "excluded_categories": [],
+                "restaurant_mixing": "unspecified",
+            },
+            "hard_requirements": [],
+            "preferences": [],
+            "budget_intent": {
+                "budget_type": "approximate_target",
+                "currency": "KRW",
+                "target_amount_minor": 200000,
+                "explicit_maximum_amount_minor": None,
+                "cost_scope": {
+                    "include_menu_price": None,
+                    "include_delivery_fee": None,
+                    "include_service_fee": None,
+                    "include_discount": None,
+                },
+                "source_text": "20만원",
+            },
+            "restriction_disclosure": {"status": "not_provided"},
+            "evidence": [
+                {
+                    "evidence_id": "e1",
+                    "field_path": "/party/total_count",
+                    "source_text": "20명",
+                    "status": "explicit",
+                    "confidence": 1.0,
+                    "start_offset": 0,
+                    "end_offset": 3,
+                    "note": None,
+                },
+                {
+                    "evidence_id": "e2",
+                    "field_path": "/food_scope/requested_categories",
+                    "source_text": "shrimp",
+                    "status": "explicit",
+                    "confidence": 1.0,
+                    "start_offset": 0,
+                    "end_offset": 6,
+                    "note": None,
+                },
+                {
+                    "evidence_id": "e3",
+                    "field_path": "/budget_intent/target_amount_minor",
+                    "source_text": "20만원",
+                    "status": "explicit",
+                    "confidence": 1.0,
+                    "start_offset": 0,
+                    "end_offset": 5,
+                    "note": None,
+                },
+                {
+                    "evidence_id": "e4",
+                    "field_path": "/location_hint/query",
+                    "source_text": "신논현역",
+                    "status": "explicit",
+                    "confidence": 1.0,
+                    "start_offset": 0,
+                    "end_offset": 4,
+                    "note": None,
+                },
+            ],
+            "unresolved_issues": [],
+        }
+    )
+    candidate = MealRequestCandidateV2.model_validate(payload)
+
+    run = await run_group_food_agent(
+        raw,
+        ValidationContextV2(request_id="request-shrimp-e2e", case_id="case-shrimp-e2e"),
+        interpreter=FixedInterpreter(candidate),
+        live_planner=False,
+    )
+
+    assert run.boundary_outcome.status == "ready_for_planning"
+    assert run.plan_result is not None and run.plan_result.display is not None
+    assert run.plan_result.display.restaurant.restaurant_id == "restaurant-delta-shinnonhyeon"
+    assert run.plan_result.display.recommended_plan.combination.total_cost_minor <= 220000
+    assert {line.menu_item_id for line in run.plan_result.display.recommended_plan.combination.lines} == {
+        "delta-grilled-shrimp-platter"
+    }
+    assumption_codes = {
+        assumption.code for assumption in run.boundary_outcome.validation_receipt.assumptions
+    }
+    assert "default_participant_group_applied" in assumption_codes
+    assert "default_meal_context_applied" in assumption_codes

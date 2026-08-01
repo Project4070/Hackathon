@@ -48,7 +48,7 @@ def calculate_serving_requirement(
 def search_menu_candidates(
     context: RunContextWrapper[PlannerDependencies], case_id: str
 ) -> ArtifactResult:
-    """Query the bounded restaurant snapshot cache for source-backed candidates.
+    """Query the configured direct restaurant source for source-backed candidates.
 
     Args:
         case_id: Existing validated planning case identifier.
@@ -58,12 +58,11 @@ def search_menu_candidates(
         return context.context.service.search_menu_candidates(case_id)
     except LookupError as exc:
         reason = str(exc)
-        status = "unsupported" if reason.startswith("planner capability unavailable") else "data_unavailable"
         return context.context.service.controlled_tool_failure(
             case_id,
             stage=5,
             tool_name="search_menu_candidates",
-            status=status,
+            status="data_unavailable",
             reason=reason,
         )
 
@@ -72,7 +71,7 @@ def search_menu_candidates(
 def enrich_menu_semantics(
     context: RunContextWrapper[PlannerDependencies], case_id: str, candidate_menu_set_id: str
 ) -> ArtifactResult:
-    """Validate cached semantic normalization and its source provenance.
+    """Validate source semantic normalization and its provenance.
 
     Args:
         case_id: Existing validated planning case identifier.

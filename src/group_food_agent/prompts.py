@@ -35,8 +35,14 @@ Semantic rules:
   budgets/times.
 - restriction_disclosure=none_reported only when the user explicitly says there
   are no restrictions. Otherwise use reported or not_provided as appropriate.
-- Evidence offsets are optional, but when supplied they are zero-based positions
-  into the exact user input and end_offset is exclusive.
+- Always set evidence start_offset and end_offset to null. Deterministic
+  application code derives exact Unicode offsets after extraction.
+- When appetite details are absent, use one normal-appetite group covering the
+  explicit total count. Application validation records this as a disclosed
+  default rather than pretending the user stated an appetite.
+- When meal context is absent, use OTHER for meal_type, service_style,
+  activity_context, and food_role. Deterministic policy supplies documented
+  planning defaults.
 
 Forbidden work:
 - Do not calculate group demand, servings, safety margins, menu quantities,

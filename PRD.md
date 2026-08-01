@@ -1,5 +1,21 @@
 # Product Requirements Document
 
+## Owner Override — 2026-08-02
+
+The live intake and planner boundary no longer enforce a chicken/pizza category
+allowlist. Any literal food category may proceed; a plan is produced only when
+the configured restaurant source contains source-backed menu, price, sale-unit,
+delivery, and practical-serving evidence for that category. Missing matches
+return `data_unavailable` and never trigger category substitution or invented
+facts.
+
+Restaurant lookup now reads one configured normalized source directly. The
+runtime no longer has a location-keyed restaurant cache, snapshot selector,
+cache-age policy, bounded refresh, or stale-cache fallback. Older cache-specific
+requirements below are superseded by this section. Semantic enrichment may
+still memoize identical sanitized source text by content hash; that is not used
+for restaurant or location selection.
+
 ## Group Food Quantity Agent
 
 **Korean working name:** 단체 배달음식 주문량 계산 AI 에이전트  

@@ -165,9 +165,7 @@
     "restaurant_search": {
       "policy_id": "restaurant-search-v1",
       "restaurant_limit": 10,
-      "delivery_required": true,
-      "allow_bounded_refresh": true,
-      "maximum_cache_age_seconds": 86400
+      "delivery_required": true
     },
     "menu_filter": {
       "policy_id": "menu-filter-v1",
@@ -205,7 +203,6 @@
       "latitude": null,
       "longitude": null
     },
-    "restaurant_snapshot_id": "snapshot-sinchon-reviewed-v1",
     "trace_id": "trace-canonical-15"
   }
 }

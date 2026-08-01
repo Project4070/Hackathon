@@ -22,7 +22,6 @@ from .planner_models import (
     ArtifactRef,
     FeedbackAdjustmentV1,
     MealFeedbackV1,
-    RestaurantSnapshotV1,
     ToolEventV1,
 )
 
@@ -137,30 +136,6 @@ class PlanningCaseStore:
             raise KeyError(f"unknown planning case: {case_id}") from exc
 
 
-class RestaurantSnapshotCache:
-    """Last-successful normalized snapshots keyed by immutable snapshot id."""
-
-    def __init__(self) -> None:
-        self._snapshots: dict[str, RestaurantSnapshotV1] = {}
-        self._latest_id: str | None = None
-
-    def put(self, snapshot: RestaurantSnapshotV1) -> None:
-        self._snapshots[snapshot.snapshot_id] = snapshot
-        if self._latest_id is None or snapshot.crawled_at >= self._snapshots[self._latest_id].crawled_at:
-            self._latest_id = snapshot.snapshot_id
-
-    def get(self, snapshot_id: str) -> RestaurantSnapshotV1:
-        try:
-            return self._snapshots[snapshot_id]
-        except KeyError as exc:
-            raise KeyError(f"restaurant snapshot unavailable: {snapshot_id}") from exc
-
-    def latest(self) -> RestaurantSnapshotV1:
-        if self._latest_id is None:
-            raise LookupError("no usable restaurant snapshot exists")
-        return self._snapshots[self._latest_id]
-
-
 class EvidenceStore:
     def __init__(self) -> None:
         self._evidence: dict[str, BaseModel] = {}
@@ -214,7 +189,6 @@ def job_from_intake(
     *,
     requested_at: datetime,
     trace_id: str,
-    snapshot_id: str | None,
     policy: PlannerRuntimePolicyV2 | None = None,
 ) -> PlanningJobV2:
     """Create a planning job without reinterpreting the validated profile."""
@@ -233,7 +207,6 @@ def job_from_intake(
                 latitude=location.latitude,
                 longitude=location.longitude,
             ),
-            restaurant_snapshot_id=snapshot_id,
             trace_id=trace_id,
         ),
     )

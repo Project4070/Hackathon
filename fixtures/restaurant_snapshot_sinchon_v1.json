@@ -425,6 +425,64 @@
           "inferred_tags": []
         }
       ]
+    },
+    {
+      "restaurant_id": "restaurant-delta-shinnonhyeon",
+      "source_restaurant_id": "fixture-delta-001",
+      "name": "Delta Seafood Demo",
+      "branch": "Shinnonhyeon Station",
+      "address": "Shinnonhyeon demo area, Gangnam-gu, Seoul",
+      "latitude": 37.502104,
+      "longitude": 127.025869,
+      "source_url": "https://example.org/group-food-demo/delta-shinnonhyeon",
+      "delivery_queries": ["신논현역", "Shinnonhyeon Station", "Gangnam-gu"],
+      "minimum_order_minor": 20000,
+      "delivery_fee_minor": 3000,
+      "service_fee_minor": 0,
+      "estimated_delivery_minutes": 40,
+      "availability": "available",
+      "menu_items": [
+        {
+          "menu_item_id": "delta-grilled-shrimp-platter",
+          "restaurant_id": "restaurant-delta-shinnonhyeon",
+          "name": "Grilled Shrimp Platter",
+          "original_text": "Grilled shrimp platter, 24 pieces, reviewed practical serving 3.5-4.5",
+          "category_code": "shrimp",
+          "price_minor": 32000,
+          "currency": "KRW",
+          "sale_unit": "platter",
+          "piece_count": 24,
+          "pizza_diameter_cm_milli": null,
+          "slice_count": null,
+          "vegetarian_status": "explicit_no",
+          "verified_free_allergens": [],
+          "allergen_tags": ["shellfish"],
+          "spice_level": "none",
+          "availability": "available",
+          "serving_evidence": {
+            "evidence_id": "evidence-delta-shrimp",
+            "source_url": "https://example.org/group-food-demo/delta-shinnonhyeon#grilled-shrimp",
+            "source_text": "24 pieces; reviewed practical serving range: 3.5-4.5",
+            "practical_servings_min_milli": 3500,
+            "practical_servings_max_milli": 4500,
+            "selected_servings_milli": 4000,
+            "confidence": "medium",
+            "observation_count": 3,
+            "reviewed": true
+          },
+          "semantic_provenance": {
+            "source_text": "Grilled shrimp platter, 24 pieces, reviewed practical serving 3.5-4.5",
+            "source_url": "https://example.org/group-food-demo/delta-shinnonhyeon#grilled-shrimp",
+            "status": "explicit",
+            "confidence": "high",
+            "model": null,
+            "prompt_version": null,
+            "source_content_hash": "delta001shrimp",
+            "enriched_at": "2026-08-02T01:00:00+09:00"
+          },
+          "inferred_tags": []
+        }
+      ]
     }
   ]
 }

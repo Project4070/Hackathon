@@ -44,7 +44,6 @@ def build_canonical_job():
         intake,
         requested_at=now,
         trace_id="trace-canonical-15",
-        snapshot_id="snapshot-sinchon-reviewed-v1",
     )
 
 

@@ -17,7 +17,7 @@ raw text
   -> deterministic validator -> PlanningIntakeV2
   -> PlanningJobV2 + policy/context
   -> Agents SDK Main Planner Agent
-       -> typed serving, cache, eligibility, search, ranking, presentation tools
+       -> typed serving, direct-source search, eligibility, ranking, presentation tools
   -> DisplayPlanV1 (recommendation + two alternatives)
 ```
 
@@ -72,17 +72,9 @@ group-food-trace .traces\<trace-file>.jsonl
 ```
 
 `--smoke-success` is an explicit alias for the canonical successful rehearsal.
-To rehearse a temporary deterministic-gateway block while keeping the same
-validated input, pass a missing snapshot ID:
-
-```powershell
-group-food-agent --smoke-success --snapshot-id snapshot-does-not-exist
-```
-
-That command exits with code `2`, prints `BLOCKED at
-deterministic_gateway/search_menu_candidates`, and includes the reason and
-corrective action in the JSON payload. A successful rehearsal prints
-`SUCCEEDED` and exits with code `0`.
+A successful rehearsal prints `SUCCEEDED` and exits with code `0`. Restaurant
+lookup reads the configured source directly; there is no location-keyed cache,
+snapshot selector, cache-age policy, or stale-cache fallback in the runtime.
 
 Use `--trace-file <path>` to choose a path or `--no-trace` to disable the local
 file. Live Interpreter and Main Planner runs are grouped into one OpenAI Agents
@@ -143,13 +135,13 @@ python -m pip check
 Important fixtures:
 
 - `fixtures/canonical_planning_job_v2.json`: golden validated 15-person job.
-- `fixtures/restaurant_snapshot_sinchon_v1.json`: three reviewed restaurant
-  branches with source, freshness, explicit dietary/allergen evidence, and
-  practical serving ranges.
+- `fixtures/restaurant_snapshot_sinchon_v1.json`: four reviewed direct-source
+  restaurant branches, including the bounded 신논현 shrimp regression source,
+  with explicit dietary/allergen evidence and practical serving ranges.
 - `fixtures/policies/serving_policy_kr_v1.json`: versioned Decimal-compatible
   appetite, context, cap, and safety-margin policy.
 
-The bounded crawler, semantic-enrichment agent, cache, stores, calculator,
+The bounded crawler, semantic-enrichment agent, direct restaurant source, stores, calculator,
 replanning, feedback, end-to-end application entry point, and adversarial tests
 are all under `src/group_food_agent` and `tests`.
 
