@@ -4,6 +4,21 @@
 
 Build a demo-ready **Group Food Quantity Agent** with approximately 15 hours of development time remaining.
 
+## Owner Override — 2026-08-02
+
+Runtime restaurant selection must not filter records by requested food category
+or delivery location. Chicken, pizza, shrimp, and every other category are
+ordinary semantic labels, never admission gates or required-coverage filters.
+The bounded direct source is searched as one available menu pool. Category and
+location remain visible request context only.
+
+There is no runtime restaurant/location cache and no semantic-enrichment result
+cache. Do not add cache lookup, freshness fallback, stale-cache behavior, or
+category/location matching back into the executable path. This section
+supersedes every conflicting cache, location-filter, category-allowlist, and
+category-coverage requirement below. Budget, quantity, explicit availability,
+and genuine dietary/allergen safety checks remain deterministic.
+
 The agent helps an organizer determine how many units of food to order for a group. It combines participant-specific appetite and dietary information with restaurant-specific serving data, then recalculates when the people, restaurant, menu, or budget changes.
 
 The hackathon topic is the **AI agent**, not the delivery service. Make the agent's information gathering, tool use, calculation, validation, explanation, and replanning visible. Do not spend the remaining time building a broad delivery marketplace.
@@ -62,7 +77,7 @@ Assume judges will deliberately stress the natural-language input with absurd, c
 - Number of expected participants.
 - Location and desired delivery time.
 - Meal context: full meal, late-night meal, or snack.
-- Desired food categories. Intake and planning do not enforce a chicken/pizza allowlist; any category may proceed when the configured direct restaurant source contains source-backed menu and serving data for it.
+- Desired food categories as non-blocking context; they never filter the configured direct menu pool.
 - Budget, if one exists.
 - Whether the organizer prefers to minimize shortage risk, leftovers, or balance both.
 - Relevant circumstances such as recent meals or significant physical activity.
@@ -321,20 +336,20 @@ Use a bounded crawler to acquire publicly visible nearby restaurant and menu dat
 - Never pass unsanitized raw HTML to the model. Remove scripts, styles, hidden text, event handlers, navigation noise, and unrelated content first.
 - Treat scraped text as untrusted data. It cannot override prompts, call tools, reveal secrets, or escape the enrichment schema.
 - Never infer allergy safety from a name, description, or photo. Derived dietary or spice tags must be marked as inferred and lower confidence.
-- Semantic enrichment may reuse results by source content hash, model, and prompt version, but restaurant lookup itself reads the configured source directly and has no location-keyed runtime cache.
+- Semantic enrichment is stateless; restaurant lookup reads the configured source directly and has no runtime cache.
 - Always display the source timestamp and data mode used in a plan.
-- If the configured direct source has no usable matching data, return a structured data-unavailable result.
+- Return data unavailable only when the configured source has no usable restaurant/menu records at all.
 - Bound crawl pages, candidates, concurrency, timeouts, and retries. Suggested MVP limits are one location query, at most 10 detail pages, low single-digit concurrency, a 10-second page timeout, and one retry.
 - Crawl only public pages the project is permitted to access. Follow applicable site rules and do not bypass authentication, CAPTCHAs, paywalls, rate limits, or technical controls.
 - Do not collect personal reviews, profiles, phone numbers, or unrelated personal data.
-- Use saved sanitized page fixtures for parser tests and freeze a manually reviewed normalized snapshot for the canonical demo.
-- The main demo may show crawler-backed lookup from that snapshot; a fresh on-stage crawl is optional and must not be a single point of failure.
+- Use saved sanitized page fixtures for parser tests and maintain one manually reviewed normalized source for the canonical demo.
+- The main demo uses that bounded source directly; a fresh on-stage crawl is optional and must not be a single point of failure.
 
 ## Hackathon MVP
 
 The bounded domain is:
 
-- Food categories: unrestricted at the intake/planner boundary; only source-backed categories with practical-serving evidence can produce a plan. The reviewed demo source currently includes chicken, pizza, and shrimp.
+- Food categories: unrestricted context labels that never filter or block the bounded source pool.
 - Restaurants per category: 3-5.
 - Representative menu and size options for each restaurant.
 - A bounded nearby restaurant/menu source adapter containing source identity, prices, sizes, weights, slice counts, pizza diameters, explicit dietary tags, provenance, source timestamps, and serving estimates.
@@ -361,7 +376,7 @@ Complete work in this order:
 7. The three strategies, clear calculation explanation, and visible provenance/freshness.
 8. Restaurant-unavailable replanning, then feedback, broader changes, participant collection, and UI polish.
 
-If time forces a cut, preserve the end-to-end agent loop, a crawler-produced reviewed snapshot, numeric correctness, visible replanning, and explanation. Cut additional sources, on-stage live refresh, provider breadth, production accounts, or presentation polish first.
+If time forces a cut, preserve the end-to-end agent loop, the reviewed direct source, numeric correctness, visible replanning, and explanation. Cut additional sources, on-stage live refresh, provider breadth, production accounts, or presentation polish first.
 
 ## Canonical Demo Story
 

@@ -52,14 +52,15 @@ from .contracts import (
 VALIDATOR_VERSION = "planning_intake_validator_v2.0.0"
 
 VOCABULARY_V1: dict[SemanticNamespace, frozenset[str]] = {
-    SemanticNamespace.FOOD_CATEGORY: frozenset({"chicken", "pizza"}),
     SemanticNamespace.ALLERGEN: frozenset(
         {"peanut", "tree_nut", "milk", "egg", "wheat", "soy", "fish", "shellfish", "sesame"}
     ),
     SemanticNamespace.DIET: frozenset(
         {"vegetarian", "vegan", "pescatarian", "no_pork", "halal", "kosher"}
     ),
-    SemanticNamespace.SPICE: frozenset({"not_spicy", "mild", "medium", "hot", "very_hot"}),
+    SemanticNamespace.SPICE: frozenset(
+        {"non_spicy", "not_spicy", "mild", "medium", "hot", "very_hot"}
+    ),
 }
 
 REQUIRED_INVARIANT_CODES = [
@@ -431,8 +432,6 @@ def _build_clarification_question(issues: list[ContractIssueV2]) -> str:
             actions.append("confirm the total participant count and mutually exclusive subgroup counts")
         elif issue.code == "location_required":
             actions.append("provide the delivery area or address")
-        elif issue.code == "food_category_missing":
-            actions.append("state the food category to plan")
         elif "budget" in issue.code:
             actions.append("confirm the KRW budget and whether it is a target or hard maximum")
         elif "evidence" in issue.code:
@@ -464,20 +463,31 @@ def validate_planning_profile(
     assumptions: list[AssumptionV2] = []
 
     party = candidate.party
-    if any(
-        evidence.status is EvidenceStatus.DEFAULTED
+    defaulted_group_evidence = [
+        evidence
+        for evidence in candidate.evidence
+        if evidence.status is EvidenceStatus.DEFAULTED
         and (
             evidence.field_path == "/party/groups"
             or evidence.field_path.startswith("/party/groups/")
         )
-        for evidence in candidate.evidence
-    ):
+    ]
+    if defaulted_group_evidence:
+        defaulted_count = 0
+        for evidence in defaulted_group_evidence:
+            parts = evidence.field_path.split("/")
+            if len(parts) == 4 and parts[-1].isdigit():
+                index = int(parts[-1])
+                if index < len(party.groups):
+                    defaulted_count += party.groups[index].count
+            elif evidence.field_path == "/party/groups":
+                defaulted_count = party.total_count
         assumptions.append(
             _assumption(
                 "default_participant_group_applied",
                 "/profile/party/groups",
-                f"{party.total_count} attendees at normal appetite",
-                "Only total attendance was stated; application policy created one normal-appetite cohort.",
+                f"{defaulted_count or party.total_count} attendees at normal appetite",
+                "Application policy assigned attendees without an explicit appetite to a disclosed normal-appetite cohort.",
             )
         )
     if not policy.minimum_group_size <= party.total_count <= policy.maximum_group_size:
@@ -540,15 +550,6 @@ def validate_planning_profile(
 
     requested_codes: set[str] = set()
     excluded_codes: set[str] = set()
-    if not candidate.food_scope.requested_categories:
-        blockers.append(
-            _contract_issue(
-                "food_category_missing",
-                IssueSeverity.BLOCKING,
-                "/candidate/food_scope/requested_categories",
-                "No food category was provided. State the food category to plan.",
-            )
-        )
     for field_name, terms, destination in (
         ("requested_categories", candidate.food_scope.requested_categories, requested_codes),
         ("excluded_categories", candidate.food_scope.excluded_categories, excluded_codes),
@@ -639,6 +640,8 @@ def validate_planning_profile(
                 )
             )
         for term in preference.terms:
+            if term.namespace is SemanticNamespace.FOOD_CATEGORY:
+                continue
             supported_codes = VOCABULARY_V1.get(term.namespace)
             if supported_codes is None or term.code not in supported_codes:
                 warnings.append(
@@ -684,7 +687,7 @@ def validate_planning_profile(
                             [evidence.evidence_id],
                         )
                     )
-    material_paths = {"/party/total_count", "/party/groups", "/food_scope/requested_categories"}
+    material_paths = {"/party/total_count", "/party/groups"}
     if candidate.budget_intent.budget_type is not BudgetIntentType.NO_BUDGET:
         material_paths.add("/budget_intent")
     if candidate.hard_requirements:

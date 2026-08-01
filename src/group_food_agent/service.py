@@ -27,7 +27,7 @@ from .planner_models import (
     PlanningFailureV1,
     PlannerAgentFinalV1,
     RankedPlanSetV1,
-    RestaurantSnapshotV1,
+    RestaurantSourceV1,
     ScoredCombinationSetV1,
     ServingCalculationInputV1,
     ServingRequirementV1,
@@ -42,7 +42,7 @@ from .planning import (
 from .restaurant import (
     apply_hard_eligibility,
     enrich_menu_semantics,
-    load_restaurant_snapshot,
+    load_restaurant_source,
     search_menu_candidates,
 )
 from .serving import build_serving_input, calculate_serving_requirement
@@ -74,7 +74,7 @@ class PlanningService:
         self,
         *,
         clock: Clock = system_clock,
-        restaurant_source: RestaurantSnapshotV1 | None = None,
+        restaurant_source: RestaurantSourceV1 | None = None,
         load_default_source: bool = True,
         trace_writer: JsonlTraceWriter | None = None,
     ) -> None:
@@ -82,7 +82,7 @@ class PlanningService:
         self.artifacts = ArtifactStore(clock)
         self.cases = PlanningCaseStore()
         self.restaurant_source = restaurant_source or (
-            load_restaurant_snapshot() if load_default_source else None
+            load_restaurant_source() if load_default_source else None
         )
         self.evidence = EvidenceStore()
         self.policies = PolicyRegistry()
@@ -457,6 +457,7 @@ class PlanningService:
                 self.restaurant_source,
                 freshness=candidates.freshness,  # type: ignore[attr-defined]
                 data_mode=candidates.data_mode,  # type: ignore[attr-defined]
+                source_warnings=candidates.warnings,  # type: ignore[attr-defined]
             )
 
         return self._run_stage(

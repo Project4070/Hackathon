@@ -25,18 +25,18 @@ from .planner_models import (
     MenuEligibilityV1,
     MenuItemV1,
     NormalizedMenuSetV1,
-    RestaurantSnapshotV1,
+    RestaurantSourceV1,
     SpiceLevel,
     VegetarianStatus,
 )
 
-def default_snapshot_path() -> Path:
-    return Path(__file__).resolve().parents[2] / "fixtures" / "restaurant_snapshot_sinchon_v1.json"
+def default_source_path() -> Path:
+    return Path(__file__).resolve().parents[2] / "fixtures" / "restaurant_source_v1.json"
 
 
-def load_restaurant_snapshot(path: Path | None = None) -> RestaurantSnapshotV1:
-    with (path or default_snapshot_path()).open("r", encoding="utf-8") as handle:
-        return RestaurantSnapshotV1.model_validate(json.load(handle))
+def load_restaurant_source(path: Path | None = None) -> RestaurantSourceV1:
+    with (path or default_source_path()).open("r", encoding="utf-8") as handle:
+        return RestaurantSourceV1.model_validate(json.load(handle))
 
 
 def sanitize_visible_text(value: str, *, maximum_length: int = 2_000) -> str:
@@ -57,40 +57,19 @@ def source_content_hash(value: str) -> str:
     return sha256(value.encode("utf-8")).hexdigest()
 
 
-def _normalized_location(value: str) -> str:
-    return re.sub(r"[^0-9a-z가-힣]", "", value.casefold())
-
-
-def _delivery_is_verified(intake: PlanningIntakeV2, restaurant) -> bool:
-    location = intake.profile.location_requirement
-    if not location.delivery_required:
-        return True
-    if location.query is None:
-        # Coordinates without an explicit source-owned delivery radius cannot
-        # prove delivery coverage.
-        return False
-    query = _normalized_location(location.query)
-    return any(
-        query in _normalized_location(coverage)
-        or _normalized_location(coverage) in query
-        for coverage in restaurant.delivery_queries
-    )
-
-
 def search_menu_candidates(
     intake: PlanningIntakeV2,
-    source: RestaurantSnapshotV1,
+    source: RestaurantSourceV1,
     *,
     now: datetime,
     restaurant_limit: int,
     unavailable_restaurant_ids: set[str] | None = None,
     unavailable_menu_item_ids: set[str] | None = None,
 ) -> CandidateMenuSetV1:
-    """Query the direct source for any requested source-backed category."""
+    """Return bounded available records without category or location gating."""
 
     unavailable_restaurants = unavailable_restaurant_ids or set()
     unavailable_items = unavailable_menu_item_ids or set()
-    requested_categories = {term.code for term in intake.profile.food_scope.requested_categories}
     excluded_restaurant_names = {
         name.casefold() for name in intake.profile.restaurant_preferences.excluded_names
     }
@@ -102,8 +81,6 @@ def search_menu_candidates(
             continue
         if restaurant.availability is not AvailabilityStatus.AVAILABLE:
             continue
-        if not _delivery_is_verified(intake, restaurant):
-            continue
         scheduled_at = intake.profile.occasion.scheduled_at
         if scheduled_at is not None and now + timedelta(
             minutes=restaurant.estimated_delivery_minutes
@@ -114,26 +91,25 @@ def search_menu_candidates(
             for item in restaurant.menu_items
             if item.menu_item_id not in unavailable_items
             and item.availability is AvailabilityStatus.AVAILABLE
-            and item.category_code in requested_categories
         ]
         if items:
             restaurants.append(restaurant.model_copy(update={"menu_items": items}))
         if len(restaurants) >= restaurant_limit:
             break
     if not restaurants:
-        location = intake.profile.location_requirement.query or "provided coordinates"
-        raise LookupError(
-            "no source-backed restaurant candidates are available for requested categories: "
-            f"{', '.join(sorted(requested_categories))}; location: {location}"
-        )
+        raise LookupError("the configured direct source has no available restaurant/menu records")
 
-    warnings = [*source.warnings, "restaurant data was read from the direct configured source; no cache was used"]
+    warnings = [
+        *source.warnings,
+        "restaurant data was read from the direct configured source; no cache was used",
+        "owner override: requested category and delivery location did not filter source records",
+    ]
     if source.completeness.value == "partial":
-        warnings.append("restaurant snapshot is partial; missing fields were not invented")
+        warnings.append("restaurant source is partial; missing fields were not invented")
     return CandidateMenuSetV1(
         case_id=intake.case_id,
         profile_revision=intake.profile_revision,
-        snapshot_id=source.snapshot_id,
+        source_id=source.source_id,
         freshness=FreshnessStatus.FRESH,
         completeness=source.completeness,
         data_mode=source.data_mode,
@@ -176,7 +152,7 @@ def _requirement_passes(item: MenuItemV1, kind: HardRequirementKind, namespace: 
             return item.vegetarian_status is VegetarianStatus.EXPLICIT_YES
         return False
     if kind is HardRequirementKind.SPICE_LIMIT or namespace is SemanticNamespace.SPICE:
-        if code in {"hot", "spicy"}:
+        if code in {"hot", "spicy", "non_spicy", "not_spicy"}:
             return item.spice_level not in {SpiceLevel.HOT, SpiceLevel.UNKNOWN}
         return False
     if kind is HardRequirementKind.FOOD_EXCLUSION:

@@ -163,8 +163,6 @@
     "DataMode": {
       "enum": [
         "crawler_live",
-        "crawler_cache",
-        "stale_cache",
         "simulated_reviewed_fixture"
       ],
       "title": "DataMode",
@@ -221,26 +219,26 @@
         "restaurant": {
           "$ref": "#/$defs/RestaurantV1"
         },
-        "snapshot_id": {
+        "source_id": {
           "maxLength": 128,
           "minLength": 1,
           "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
-          "title": "Snapshot Id",
+          "title": "Source Id",
           "type": "string"
         },
-        "snapshot_crawled_at": {
+        "source_observed_at": {
           "format": "date-time",
-          "title": "Snapshot Crawled At",
+          "title": "Source Observed At",
           "type": "string"
         },
-        "snapshot_parser_version": {
+        "source_parser_version": {
           "maxLength": 128,
           "minLength": 1,
           "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
-          "title": "Snapshot Parser Version",
+          "title": "Source Parser Version",
           "type": "string"
         },
-        "snapshot_completeness": {
+        "source_completeness": {
           "$ref": "#/$defs/CompletenessStatus"
         },
         "freshness": {
@@ -277,10 +275,10 @@
         "recommended_plan",
         "alternatives",
         "restaurant",
-        "snapshot_id",
-        "snapshot_crawled_at",
-        "snapshot_parser_version",
-        "snapshot_completeness",
+        "source_id",
+        "source_observed_at",
+        "source_parser_version",
+        "source_completeness",
         "freshness",
         "data_mode",
         "expected_outcome",
@@ -335,8 +333,7 @@
     },
     "FreshnessStatus": {
       "enum": [
-        "fresh",
-        "stale"
+        "fresh"
       ],
       "title": "FreshnessStatus",
       "type": "string"

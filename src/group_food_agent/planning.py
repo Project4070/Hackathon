@@ -7,7 +7,7 @@ from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from hashlib import sha256
 from itertools import product
 
-from .contracts import CategorySelection, PlanningIntakeV2, RiskPreference
+from .contracts import PlanningIntakeV2, RiskPreference
 from .planner_contracts import PlannerRuntimePolicyV2, RankingMetric
 from .planner_models import (
     AlternativePlanV1,
@@ -23,7 +23,7 @@ from .planner_models import (
     PlanStrategy,
     PlanValidationV1,
     RankedPlanSetV1,
-    RestaurantSnapshotV1,
+    RestaurantSourceV1,
     ScoredCombinationSetV1,
     ScoredCombinationV1,
     ServingRequirementV1,
@@ -146,7 +146,6 @@ def generate_budget_combinations(
     """Search nearby integer quantities and keep only hard-valid combinations."""
 
     multipliers = menu_serving_multipliers_basis_points or {}
-    requested_categories = {term.code for term in intake.profile.food_scope.requested_categories}
     maximum_budget = intake.profile.budget.maximum_amount_minor
     maximum_total = policy.combination.maximum_total_quantity or 20
     maximum_distinct = policy.combination.maximum_distinct_items or 20
@@ -159,8 +158,7 @@ def generate_budget_combinations(
         restaurant = eligible_restaurant.restaurant
         rows = {row.menu_item_id: row for row in eligible_restaurant.eligibility}
         all_items = [item for item in restaurant.menu_items if rows[item.menu_item_id].eligible_group_ids]
-        # Keep the search dimensionality bounded. Preserve the best explicit
-        # option from every requested category, then fill by broad eligibility,
+        # Keep the search dimensionality bounded, ordered by broad eligibility,
         # lower preference penalty, and price per source-backed serving.
         ordered = sorted(
             all_items,
@@ -172,12 +170,7 @@ def generate_budget_combinations(
                 item.menu_item_id,
             ),
         )
-        items = []
-        for category in sorted(requested_categories):
-            category_item = next((item for item in ordered if item.category_code == category), None)
-            if category_item is not None and category_item not in items:
-                items.append(category_item)
-        items.extend(item for item in ordered if item not in items)
+        items = list(ordered)
         if len(items) > MAX_SEARCH_ITEMS_PER_RESTAURANT:
             items = items[:MAX_SEARCH_ITEMS_PER_RESTAURANT]
             search_was_truncated = True
@@ -219,15 +212,6 @@ def generate_budget_combinations(
                 distinct = sum(1 for quantity in quantities if quantity)
                 if total_quantity > maximum_total or distinct > maximum_distinct:
                     continue
-                selected_categories = {
-                    item.category_code for item, quantity in zip(items, quantities, strict=True) if quantity
-                }
-                category_pass = (
-                    intake.profile.food_scope.category_selection is not CategorySelection.INCLUDE_ALL
-                    or requested_categories.issubset(selected_categories)
-                )
-                if not category_pass:
-                    continue
                 capacities = {
                     item.menu_item_id: quantity * unit_servings[item.menu_item_id]
                     for item, quantity in zip(items, quantities, strict=True)
@@ -257,7 +241,7 @@ def generate_budget_combinations(
                 minimum_pass = subtotal >= restaurant.minimum_order_minor
                 budget_pass = maximum_budget is None or budget_evaluated_cost <= maximum_budget
                 delivery_pass = restaurant.availability.value == "available"
-                hard_pass = group_pass and category_pass and minimum_pass and budget_pass and delivery_pass
+                hard_pass = group_pass and minimum_pass and budget_pass and delivery_pass
                 if not hard_pass:
                     reason = "budget" if not budget_pass else "minimum_or_delivery"
                     rejection_counts[reason] = rejection_counts.get(reason, 0) + 1
@@ -316,7 +300,7 @@ def generate_budget_combinations(
     valid = valid[:retained_limit]
     rejection_reasons = [f"{reason}:{count}" for reason, count in sorted(rejection_counts.items())]
     if not valid and not rejection_reasons:
-        rejection_reasons = ["no integer combination satisfied eligibility, category, and quantity constraints"]
+        rejection_reasons = ["no integer combination satisfied eligibility and quantity constraints"]
     return CombinationSetV1(
         case_id=intake.case_id,
         profile_revision=intake.profile_revision,
@@ -355,7 +339,7 @@ def _metric_scores(
     values = {
         RankingMetric.CONSTRAINT_SATISFACTION: (10_000, "all deterministic hard constraints passed"),
         RankingMetric.SERVING_FIT: (serving_fit, "score decreases with avoidable whole-unit surplus"),
-        RankingMetric.MENU_DIVERSITY: (diversity, "requested categories and item concentration evaluated"),
+        RankingMetric.MENU_DIVERSITY: (diversity, "item concentration evaluated without category gating"),
         RankingMetric.BUDGET_EFFICIENCY: (budget_efficiency, "remaining room under the validated budget ceiling"),
         RankingMetric.ORDER_SIMPLICITY: (max(0, 10_000 - (len(combination.lines) - 1) * 1_000), "fewer distinct lines are simpler"),
         RankingMetric.DELIVERY_FIT: (10_000, "delivery constraint passed"),
@@ -478,10 +462,11 @@ def get_plan_for_presentation(
     intake: PlanningIntakeV2,
     requirement: ServingRequirementV1,
     ranked: RankedPlanSetV1,
-    snapshot: RestaurantSnapshotV1,
+    source: RestaurantSourceV1,
     *,
     freshness,
     data_mode,
+    source_warnings: list[str] | None = None,
 ) -> DisplayPlanV1:
     recommended = next(
         plan for plan in ranked.plans if plan.combination.strategy is ranked.recommended_strategy
@@ -492,7 +477,7 @@ def get_plan_for_presentation(
             plan=plan,
             restaurant=next(
                 candidate
-                for candidate in snapshot.restaurants
+                for candidate in source.restaurants
                 if candidate.restaurant_id == plan.combination.restaurant_id
             ),
         )
@@ -500,7 +485,7 @@ def get_plan_for_presentation(
     ]
     restaurant = next(
         restaurant
-        for restaurant in snapshot.restaurants
+        for restaurant in source.restaurants
         if restaurant.restaurant_id == recommended.combination.restaurant_id
     )
     target_row = next(
@@ -516,11 +501,9 @@ def get_plan_for_presentation(
         ),
         key=lambda label: confidence_order[label],
     )
-    uncertainties = list(snapshot.warnings)
+    uncertainties = list(source_warnings if source_warnings is not None else source.warnings)
     if confidence is not ConfidenceLabel.HIGH:
         uncertainties.append("at least one selected item uses non-high-confidence practical serving evidence")
-    if freshness.value == "stale":
-        uncertainties.append("restaurant data is stale")
     risk_labels = {
         PlanStrategy.LEFTOVER_MINIMIZING: ("higher", "lower"),
         PlanStrategy.BALANCED: ("moderate", "moderate"),
@@ -551,10 +534,10 @@ def get_plan_for_presentation(
         recommended_plan=recommended,
         alternatives=alternatives,
         restaurant=restaurant,
-        snapshot_id=snapshot.snapshot_id,
-        snapshot_crawled_at=snapshot.crawled_at,
-        snapshot_parser_version=snapshot.parser_version,
-        snapshot_completeness=snapshot.completeness,
+        source_id=source.source_id,
+        source_observed_at=source.crawled_at,
+        source_parser_version=source.parser_version,
+        source_completeness=source.completeness,
         freshness=freshness,
         data_mode=data_mode,
         expected_outcome=ExpectedOutcomeV1(

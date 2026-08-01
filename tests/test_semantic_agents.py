@@ -27,7 +27,7 @@ def test_focused_semantic_agents_are_sdk_agents_without_tools():
 
 
 @pytest.mark.asyncio
-async def test_enricher_preserves_source_phrase_and_caches_by_hash():
+async def test_enricher_preserves_source_phrase_without_caching():
     calls = 0
 
     async def fake_runner(agent, prompt, max_turns, run_config):
@@ -56,8 +56,8 @@ async def test_enricher_preserves_source_phrase_and_caches_by_hash():
 
     assert first == second
     assert first_hit is False
-    assert second_hit is True
-    assert calls == 1
+    assert second_hit is False
+    assert calls == 2
 
 
 @pytest.mark.asyncio

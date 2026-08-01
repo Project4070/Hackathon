@@ -48,10 +48,53 @@ three-strategy tradeoff, and source/freshness uncertainty. Never describe the
 synthetic reviewed fixture as live restaurant data.
 If any tool returns artifact_type=planning_failure, stop immediately, copy that
 exact ID into failure_artifact_id, set display_artifact_id to null, and explain
-the smallest stated corrective action. Never drop the requested category,
-invent menu facts, or silently substitute another food when the direct source
-has no matching records.
+the smallest stated corrective action. The host independently verifies terminal
+artifact type, case, and revision; never use an intermediate artifact ID as a
+display or failure ID.
 """.strip()
+
+
+def _fallback_explanation(
+    case_id: str,
+    run: PlanRunResult,
+) -> PlannerAgentFinalV1:
+    """Describe a host-completed deterministic run without reusing bad model claims."""
+
+    if run.display_artifact_id is not None:
+        return PlannerAgentFinalV1(
+            case_id=case_id,
+            display_artifact_id=run.display_artifact_id,
+            failure_artifact_id=None,
+            summary="The host completed the deterministic planner after rejecting a non-terminal agent artifact ID.",
+            recommendation_explanation="The recommendation and quantities come from the validated display-plan artifact.",
+            tradeoff_explanation="The display-plan artifact contains leftover-minimizing, balanced, and shortage-minimizing strategies.",
+            uncertainty_explanation="Source limitations and planning assumptions are preserved in the display-plan artifact.",
+        )
+    assert run.failure_artifact_id is not None
+    return PlannerAgentFinalV1(
+        case_id=case_id,
+        display_artifact_id=None,
+        failure_artifact_id=run.failure_artifact_id,
+        summary="The host completed the deterministic planner after rejecting a non-terminal agent artifact ID.",
+        recommendation_explanation="No recommendation was produced because the deterministic pipeline returned a planning failure.",
+        tradeoff_explanation="No strategy comparison is available for a deterministic planning failure.",
+        uncertainty_explanation="The planning-failure artifact contains the controlled reason and corrective action.",
+    )
+
+
+def _complete_deterministically(
+    service: PlanningService,
+    case_id: str,
+) -> PlanRunResult:
+    run = service.plan_case(case_id)
+    explanation = _fallback_explanation(case_id, run)
+    return PlanRunResult(
+        display=run.display,
+        failure=run.failure,
+        display_artifact_id=run.display_artifact_id,
+        failure_artifact_id=run.failure_artifact_id,
+        agent_explanation=explanation,
+    )
 
 
 def build_main_planner_agent(model: str | None = None) -> Agent[PlannerDependencies]:
@@ -113,19 +156,33 @@ async def run_agent_plan(
     final = result.final_output
     if not isinstance(final, PlannerAgentFinalV1):
         final = PlannerAgentFinalV1.model_validate(final)
-    if final.case_id != case_id:
-        raise RuntimeError("planner agent returned a different case_id")
     state = service.cases.get(case_id)
+    if final.case_id != case_id:
+        return _complete_deterministically(service, case_id)
     if final.display_artifact_id:
-        ref = service.artifacts.ref(final.display_artifact_id)
-        if ref.case_id != case_id or ref.profile_revision != state.job.intake.profile_revision:
-            raise RuntimeError("planner agent returned a stale or cross-case display artifact")
+        try:
+            ref = service.artifacts.ref(final.display_artifact_id)
+        except KeyError:
+            return _complete_deterministically(service, case_id)
+        if (
+            ref.artifact_type != "display_plan"
+            or ref.case_id != case_id
+            or ref.profile_revision != state.job.intake.profile_revision
+        ):
+            return _complete_deterministically(service, case_id)
         display = service.artifacts.get(final.display_artifact_id, DisplayPlanV1)
         return PlanRunResult(display, None, final.display_artifact_id, None, final)  # type: ignore[arg-type]
     if final.failure_artifact_id:
-        ref = service.artifacts.ref(final.failure_artifact_id)
-        if ref.case_id != case_id or ref.profile_revision != state.job.intake.profile_revision:
-            raise RuntimeError("planner agent returned a stale or cross-case failure artifact")
+        try:
+            ref = service.artifacts.ref(final.failure_artifact_id)
+        except KeyError:
+            return _complete_deterministically(service, case_id)
+        if (
+            ref.artifact_type != "planning_failure"
+            or ref.case_id != case_id
+            or ref.profile_revision != state.job.intake.profile_revision
+        ):
+            return _complete_deterministically(service, case_id)
         failure = service.artifacts.get(final.failure_artifact_id, PlanningFailureV1)
         return PlanRunResult(None, failure, None, final.failure_artifact_id, final)  # type: ignore[arg-type]
-    raise RuntimeError("planner agent returned neither a display nor failure artifact id")
+    return _complete_deterministically(service, case_id)

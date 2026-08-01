@@ -163,7 +163,7 @@ class PlannerViewV2(ContractModel):
     profile_revision: Annotated[int, Field(strict=True, ge=1)]
     participant_count: Annotated[int, Field(strict=True, ge=1, le=100)]
     location_query: Annotated[str, StringConstraints(min_length=1, max_length=300)] | None
-    requested_category_codes: Annotated[list[str], Field(min_length=1, max_length=16)]
+    requested_category_codes: Annotated[list[str], Field(max_length=16)]
     hard_requirement_ids: Annotated[list[Identifier], Field(max_length=100)]
     risk_preference: Annotated[str, StringConstraints(min_length=1, max_length=50)]
     maximum_budget_minor: Annotated[int, Field(strict=True, ge=0)] | None

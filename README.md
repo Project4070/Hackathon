@@ -74,7 +74,9 @@ group-food-trace .traces\<trace-file>.jsonl
 `--smoke-success` is an explicit alias for the canonical successful rehearsal.
 A successful rehearsal prints `SUCCEEDED` and exits with code `0`. Restaurant
 lookup reads the configured source directly; there is no location-keyed cache,
-snapshot selector, cache-age policy, or stale-cache fallback in the runtime.
+snapshot selector, cache-age policy, stale-cache fallback, or semantic result
+cache in the runtime. Requested categories and delivery locations are retained
+as context but do not filter the bounded direct-source menu pool.
 
 Use `--trace-file <path>` to choose a path or `--no-trace` to disable the local
 file. Live Interpreter and Main Planner runs are grouped into one OpenAI Agents
@@ -120,7 +122,7 @@ group-food-agent --offline-canonical
 group-food-demo --replan-unavailable --feedback shortage
 ```
 
-The restaurant snapshot is a synthetic, manually reviewed crawler-style
+The restaurant source is a synthetic, manually reviewed crawler-style
 fixture. Every displayed plan labels it `simulated_reviewed_fixture`; it must not
 be presented as live pricing or availability.
 
@@ -135,7 +137,7 @@ python -m pip check
 Important fixtures:
 
 - `fixtures/canonical_planning_job_v2.json`: golden validated 15-person job.
-- `fixtures/restaurant_snapshot_sinchon_v1.json`: four reviewed direct-source
+- `fixtures/restaurant_source_v1.json`: four reviewed direct-source
   restaurant branches, including the bounded 신논현 shrimp regression source,
   with explicit dietary/allergen evidence and practical serving ranges.
 - `fixtures/policies/serving_policy_kr_v1.json`: versioned Decimal-compatible
@@ -147,7 +149,7 @@ are all under `src/group_food_agent` and `tests`.
 
 ## Naver Place HTTP adapter demo
 
-The Naver Place adapter is deliberately separate from the planner snapshot. It
+The Naver Place adapter is deliberately separate from the planner source. It
 returns the fields observed in the public Place HTML plus explicit
 `availableFields` and `unavailableFields`. Missing servings, sale units,
 allergens, delivery fees, minimum order, and delivery time are not invented.

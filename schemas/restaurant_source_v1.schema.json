@@ -29,8 +29,6 @@
     "DataMode": {
       "enum": [
         "crawler_live",
-        "crawler_cache",
-        "stale_cache",
         "simulated_reviewed_fixture"
       ],
       "title": "DataMode",
@@ -509,8 +507,8 @@
   "additionalProperties": false,
   "properties": {
     "schema_name": {
-      "const": "restaurant_snapshot",
-      "default": "restaurant_snapshot",
+      "const": "restaurant_source",
+      "default": "restaurant_source",
       "title": "Schema Name",
       "type": "string"
     },
@@ -520,11 +518,11 @@
       "title": "Schema Version",
       "type": "string"
     },
-    "snapshot_id": {
+    "source_id": {
       "maxLength": 128,
       "minLength": 1,
       "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
-      "title": "Snapshot Id",
+      "title": "Source Id",
       "type": "string"
     },
     "source_url": {
@@ -574,7 +572,7 @@
     }
   },
   "required": [
-    "snapshot_id",
+    "source_id",
     "source_url",
     "crawled_at",
     "parser_version",
@@ -584,6 +582,6 @@
     "warnings",
     "restaurants"
   ],
-  "title": "RestaurantSnapshotV1",
+  "title": "RestaurantSourceV1",
   "type": "object"
 }

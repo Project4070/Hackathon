@@ -38,7 +38,6 @@
         "type": "string"
       },
       "maxItems": 16,
-      "minItems": 1,
       "title": "Requested Category Codes",
       "type": "array"
     },

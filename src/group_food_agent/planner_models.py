@@ -49,7 +49,6 @@ class ConfidenceLabel(StrEnum):
 
 class FreshnessStatus(StrEnum):
     FRESH = "fresh"
-    STALE = "stale"
 
 
 class CompletenessStatus(StrEnum):
@@ -59,8 +58,6 @@ class CompletenessStatus(StrEnum):
 
 class DataMode(StrEnum):
     CRAWLER_LIVE = "crawler_live"
-    CRAWLER_CACHE = "crawler_cache"
-    STALE_CACHE = "stale_cache"
     SIMULATED_REVIEWED_FIXTURE = "simulated_reviewed_fixture"
 
 
@@ -217,10 +214,10 @@ class RestaurantV1(ContractModel):
     menu_items: Annotated[list[MenuItemV1], Field(min_length=1, max_length=100)]
 
 
-class RestaurantSnapshotV1(ContractModel):
-    schema_name: Literal["restaurant_snapshot"] = "restaurant_snapshot"
+class RestaurantSourceV1(ContractModel):
+    schema_name: Literal["restaurant_source"] = "restaurant_source"
     schema_version: Literal["1.0"] = "1.0"
-    snapshot_id: Identifier
+    source_id: Identifier
     source_url: Annotated[str, StringConstraints(min_length=1, max_length=500)]
     crawled_at: AwareDatetime
     parser_version: Identifier
@@ -236,7 +233,7 @@ class CandidateMenuSetV1(ContractModel):
     schema_version: Literal["1.0"] = "1.0"
     case_id: Identifier
     profile_revision: Annotated[int, Field(strict=True, ge=1)]
-    snapshot_id: Identifier
+    source_id: Identifier
     freshness: FreshnessStatus
     completeness: CompletenessStatus
     data_mode: DataMode
@@ -392,10 +389,10 @@ class DisplayPlanV1(ContractModel):
     recommended_plan: ScoredCombinationV1
     alternatives: Annotated[list[AlternativePlanV1], Field(min_length=2, max_length=2)]
     restaurant: RestaurantV1
-    snapshot_id: Identifier
-    snapshot_crawled_at: AwareDatetime
-    snapshot_parser_version: Identifier
-    snapshot_completeness: CompletenessStatus
+    source_id: Identifier
+    source_observed_at: AwareDatetime
+    source_parser_version: Identifier
+    source_completeness: CompletenessStatus
     freshness: FreshnessStatus
     data_mode: DataMode
     expected_outcome: ExpectedOutcomeV1

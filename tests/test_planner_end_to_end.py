@@ -66,8 +66,8 @@ def test_canonical_plan_is_reproducible_and_hard_valid(planning_service):
         "shortage_minimizing",
     }
     assert display.data_mode.value == "simulated_reviewed_fixture"
-    assert display.snapshot_completeness.value == "complete"
-    assert display.snapshot_parser_version == "fixture-parser-v1"
+    assert display.source_completeness.value == "complete"
+    assert display.source_parser_version == "fixture-parser-v1"
     assert display.expected_outcome.uncertainties
 
 

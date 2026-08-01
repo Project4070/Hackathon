@@ -2,19 +2,18 @@
 
 ## Owner Override — 2026-08-02
 
-The live intake and planner boundary no longer enforce a chicken/pizza category
-allowlist. Any literal food category may proceed; a plan is produced only when
-the configured restaurant source contains source-backed menu, price, sale-unit,
-delivery, and practical-serving evidence for that category. Missing matches
-return `data_unavailable` and never trigger category substitution or invented
-facts.
+The live intake and planner boundary does not enforce a food-category allowlist,
+category match, category-coverage requirement, or location/delivery-area match.
+Chicken, pizza, shrimp, and every other category are request context rather than
+runtime selection gates. The planner searches the configured bounded menu pool
+without adding records and returns `data_unavailable` only when that source has
+no usable restaurant/menu records at all.
 
 Restaurant lookup now reads one configured normalized source directly. The
-runtime no longer has a location-keyed restaurant cache, snapshot selector,
-cache-age policy, bounded refresh, or stale-cache fallback. Older cache-specific
-requirements below are superseded by this section. Semantic enrichment may
-still memoize identical sanitized source text by content hash; that is not used
-for restaurant or location selection.
+runtime has no restaurant/location cache, semantic-enrichment result cache,
+snapshot selector, cache-age policy, bounded refresh, or stale-cache fallback.
+Older cache-specific and category/location filtering requirements below are
+superseded by this section.
 
 ## Group Food Quantity Agent
 
@@ -332,7 +331,7 @@ These limits define what the MVP can safely calculate; they are not universal cl
 For a requested dish such as `sdgfidfuweor`:
 
 - Preserve the literal term.
-- Search the structured menu/category data without inventing a match.
+- Search the structured menu data without category gating.
 - Return `unknown_food_or_menu` when no supported match exists.
 - If fuzzy matching suggests a likely typo, present it only as a suggestion and require confirmation.
 - Offer a short list of actually available categories or menu items from the dataset.
@@ -531,14 +530,14 @@ The MVP should expose a small, observable tool set:
 search_nearby_restaurants(location, categories, refreshPolicy)
 crawl_restaurant_details(sourceRestaurantIds)
 enrich_scraped_menu_text(crawlRecordIds)
-get_cached_menu_data(restaurantIds, categories, maxAge)
+get_menu_data(sourceId)
 match_group_preferences(groupProfile, menuItems)
 calculate_order_plans(mealRequest, restaurants)
 validate_order_plan(plan, mealRequest, restaurant)
 record_meal_feedback(orderId, feedback)
 ```
 
-The restaurant-search tool should query normalized cached crawl results and may request a bounded refresh when the cache is stale. Tool inputs and results must be structured. The live demo must expose the actual raw `tool_call` and `tool_result` events without exposing API keys or authorization headers.
+The restaurant-search tool reads the bounded normalized direct source without category or location filtering. Tool inputs and results must be structured. The live demo must expose the actual raw `tool_call` and `tool_result` events without exposing API keys or authorization headers.
 
 ## 12. Deterministic Quantity Engine
 
@@ -681,19 +680,19 @@ location + food categories
   -> NLP semantic enrichment and grouping
   -> deduplication
   -> schema and quality validation
-  -> provenance-aware cache
+  -> provenance-aware direct source
   -> agent restaurant/menu lookup tool
 ```
 
 ### 14.2 MVP acquisition scope
 
-- Food categories: chicken and pizza.
+- Food categories: unrestricted context labels with no runtime selection gate.
 - Search around the location extracted from the organizer's free text.
 - Acquire approximately three usable chicken restaurants and three usable pizza restaurants for the canonical area.
 - Capture representative menu and size options for each restaurant.
 - Capture enough portion variation to prove that the same group may require different quantities at different restaurants.
 - Prefer one reliable public source adapter during the hackathon rather than multiple fragile sources.
-- Allow a manually reviewed cached snapshot from the latest successful crawl as the demo fallback.
+- Allow a manually reviewed direct source as the demo dataset.
 
 Nearby means geographically relevant to the user's stated location. It does not automatically mean that the restaurant currently delivers to that exact address. Delivery eligibility, live availability, and ETA must be marked unverified unless the source explicitly provides them.
 
@@ -783,23 +782,22 @@ CrawlRecord
   rawContentHash?
 
 RestaurantDataStatus
-  source: crawler | crawl_cache | fixture
+  source: crawler | fixture
   freshness
   lastSuccessfulCrawlAt
   completeness
   warnings[]
 ```
 
-The normalized, semantically enriched cache is the data contract consumed by the agent. Raw HTML must not be passed directly to the LLM or quantity engine.
+The normalized direct source is the data contract consumed by the agent. Raw HTML must not be passed directly to the LLM or quantity engine.
 
 ### 14.7 Freshness and runtime behavior
 
 - Store every successful normalized crawl with `crawledAt`, source, and completeness.
 - Use a configurable freshness window; a suggested MVP default is 24 hours.
-- At runtime, search fresh cached records first.
-- When data is missing or stale, the agent may call a bounded refresh tool if the demo mode and remaining latency allow it.
-- If refresh fails, use the latest successful cache only when it exists and clearly label it as stale.
-- If no usable current or cached data exists, return a restaurant-data error rather than inventing restaurants or menus.
+- At runtime, read the configured direct source without a freshness gate.
+- Acquisition and refresh are separate from runtime planning.
+- If the direct source has no usable records, return a restaurant-data error rather than inventing restaurants or menus.
 - Price, menu, and availability changes after the crawl are always possible; the result must display the crawl time.
 
 ### 14.8 Crawl limits and respectful access
@@ -822,10 +820,10 @@ Suggested hackathon limits are configurable: one location query per plan, at mos
 The canonical demo must not depend on a fresh external crawl succeeding on stage. Before submission:
 
 1. Run the crawler for the canonical location.
-2. Review and freeze a normalized snapshot with at least three chicken and three pizza restaurants.
+2. Review a bounded normalized direct source; category counts do not gate runtime planning.
 3. Demonstrate the agent's crawler-backed lookup through tool events.
-4. Optionally demonstrate refresh, but fall back to the labeled snapshot if the source is slow, blocked, or changed.
-5. Never describe cached results as live.
+4. Optionally demonstrate acquisition separately; runtime planning reads the labeled direct source.
+5. Never describe fixture results as live.
 
 Saved page fragments or sanitized fixtures should be used for crawler parser tests so layout regressions can be tested without repeatedly hitting the source.
 
@@ -941,7 +939,7 @@ When a condition changes, show:
 | FR-23 | P1 | Accept Korean and English input through the same schema. |
 | FR-24 | P0 | Normalize and deduplicate crawled restaurant branches and menu items into the shared data schema. |
 | FR-25 | P0 | Retain source URL, crawl timestamp, parser version, completeness, and staleness for crawler-derived data. |
-| FR-26 | P0 | Query fresh cached crawl data first and use a clearly labeled last-successful snapshot when refresh fails. |
+| FR-26 | P0 | Read the configured direct source without cache lookup or freshness fallback. |
 | FR-27 | P0 | Bound crawl pages, concurrency, timeouts, retries, and downstream candidate counts. |
 | FR-28 | P0 | Return partial or failed crawl status without inventing missing restaurants, menus, prices, or availability. |
 | FR-29 | P0 | Use NLP to normalize and classify sanitized scraped menu text, variants, bundles, aliases, and serving cues. |
@@ -963,11 +961,11 @@ When a condition changes, show:
 
 ### Performance
 
-- Target end-to-end response time: under 15 seconds when using the normalized crawl cache.
+- Target end-to-end response time: under 15 seconds when using the normalized direct source.
 - Target deterministic calculation time: under 1 second for the MVP search space.
 - Show progressive stage status so the user understands longer model or tool waits.
-- A live refresh may take longer than the cached path and must use an explicit timeout rather than block indefinitely.
-- Batch and cache scraped-text semantic enrichment so repeated planning requests do not repeat unchanged NLP work.
+- A live acquisition may take longer than the direct-source path and must use an explicit timeout rather than block indefinitely.
+- Semantic enrichment is stateless in the runtime path.
 
 ### Explainability
 
@@ -1021,7 +1019,7 @@ Retry once with the validation errors. If it still fails, show a clear error and
 
 ### Restaurant-data tool failure
 
-Use the last successful normalized crawl snapshot when available and label its crawl time and staleness. If no usable cache exists, return a structured data-unavailable error. Never claim that cached price, availability, delivery eligibility, or delivery time is live.
+Use the configured normalized direct source and label its observation time and simulated/live mode. Return data unavailable only when the source has no usable records. Never claim fixture price, availability, delivery eligibility, or delivery time is live.
 
 ### Partial crawl
 
@@ -1029,7 +1027,7 @@ Retain the successfully extracted fields and attach completeness warnings. Do no
 
 ### Crawler selector or page-layout change
 
-Stop the affected adapter cleanly, record the parser failure, and use the last successful cache if permitted. Do not broaden selectors blindly or treat unrelated page text as menu data.
+Stop the affected adapter cleanly and record the parser failure. Do not broaden selectors blindly or treat unrelated page text as menu data.
 
 ### Duplicate or ambiguous restaurant identity
 
@@ -1041,7 +1039,7 @@ Preserve the literal source field and mark the semantic value ambiguous. It may 
 
 ### NLP enrichment failure
 
-Retry once when schema validation explains a repairable output error. If enrichment still fails, keep explicit structurally extracted fields, mark semantic fields unavailable, and use a previously cached enrichment only when its source content hash and enrichment version match.
+Retry once when schema validation explains a repairable output error. If enrichment still fails, keep explicit structurally extracted fields and mark semantic fields unavailable.
 
 ### Prompt injection in scraped text
 
@@ -1201,7 +1199,7 @@ Given an otherwise valid meal request containing one absurd field, the agent ide
 
 ### Scenario R — Nearby restaurant crawl
 
-Given a valid location and chicken/pizza request, the crawler discovers nearby candidates, retrieves menu details, normalizes branch identity, deduplicates repeated results, and stores source and crawl timestamps before the agent plans.
+Given a readable request, the planner reads the bounded direct menu source without category or location gating and preserves its source timestamps.
 
 ### Scenario S — Partial menu extraction
 
@@ -1209,7 +1207,7 @@ Given a restaurant page where some menu prices or sizes cannot be extracted, the
 
 ### Scenario T — Crawl refresh failure
 
-Given a timeout, block, or page-layout change during refresh, the system uses the last successful snapshot when available, visibly labels its age, and never represents it as live. Without a usable snapshot, it returns a data-unavailable result.
+Crawler timeout or page-layout failure does not alter runtime planning because acquisition is separate from the configured direct source.
 
 ### Scenario U — Branch deduplication
 
@@ -1233,7 +1231,7 @@ Given a scraped menu description containing instructions to ignore policies or r
 
 ### Scenario Z — Ambiguous or failed enrichment
 
-Given a low-confidence category match or failed NLP call, the system preserves the literal crawl data, labels the semantic fields ambiguous or unavailable, uses an exactly matching cached enrichment when valid, and never upgrades inference into a hard fact.
+Given a low-confidence category label or failed NLP call, the system preserves literal source data, labels semantic fields ambiguous or unavailable, and never upgrades inference into a hard fact.
 
 ## 22. Success Metrics
 
@@ -1243,9 +1241,9 @@ Given a low-confidence category match or failed NLP call, the system preserves t
 - 100% hard-constraint compliance for valid plans in the prepared dataset.
 - Correctly structured extraction for at least five varied unseen prompts.
 - Controlled, non-hallucinated outcomes for every adversarial acceptance scenario K–Q.
-- A normalized crawler snapshot containing at least three usable chicken and three usable pizza restaurants for the canonical location.
+- A normalized direct source containing enough reviewed menu records for the canonical quantity demonstration.
 - Source URL, crawl timestamp, and completeness status on 100% of crawler-derived restaurant records used in a plan.
-- Controlled partial-data and stale-cache behavior for crawler acceptance scenarios R–U.
+- Controlled partial-data behavior for source acceptance scenarios R–U.
 - Schema-valid, provenance-preserving semantic results for the messy-menu and preference scenarios V–Z.
 - Zero cases where inferred NLP tags are presented as verified prices, availability, portions, identity, or allergy safety.
 - Restaurant-unavailable replanning succeeds without code changes.
@@ -1271,7 +1269,7 @@ Given a low-confidence category match or failed NLP call, the system preserves t
 - Explicit unknown-food behavior with no invented menu data.
 - Korean-language canonical demo input.
 - Bounded nearby restaurant and menu crawler for chicken and pizza.
-- Normalized, deduplicated crawler cache with provenance and a reviewed demo snapshot.
+- Normalized, deduplicated direct source with provenance.
 - NLP enrichment of sanitized scraped menu text, menu grouping, and group-preference matching.
 - Deterministic revalidation of every NLP-derived field used for filtering or planning.
 - Deterministic appetite and context calculation.
@@ -1292,7 +1290,7 @@ Given a low-confidence category match or failed NLP call, the system preserves t
 ### P2 — defer first
 
 - Participant share link.
-- Live on-stage crawl refresh; retain crawler-backed cached lookup.
+- Live on-stage acquisition; retain the reviewed direct source for runtime planning.
 - Additional food categories.
 - User accounts and history UI.
 - Sophisticated learning or optimization.
@@ -1327,7 +1325,7 @@ The implementation begins from the following decisions:
 4. Application code combines a ready intake with trusted runtime policy and execution context to create `PlanningJobV2`, the only accepted Steps 5–10 entry type.
 5. Participant groups are mutually exclusive cohorts. Their counts equal `party.total_count`; overlapping dietary restrictions are represented through group IDs rather than double-counted people.
 6. The existing serving calculator is retained behind `build_serving_input`. This versioned adapter maps contract vocabulary to calculator vocabulary without changing calculator constants or allowing the model to perform arithmetic.
-7. The Main Planner Agent orchestrates narrow tools primarily with `case_id` and artifact IDs. Full profiles, evidence, caches, and large candidate sets remain server-side.
+7. The Main Planner Agent orchestrates narrow tools primarily with `case_id` and artifact IDs. Full profiles, evidence, sources, and large candidate sets remain server-side.
 8. Hard allergy/diet eligibility is deterministic and precedes combination generation. Unknown safety-relevant data cannot be treated as safe.
 9. Budget-valid integer combinations are generated deterministically. Soft preference semantics may be scored by an agent-as-tool, but final ranking and all hard checks are deterministic.
 10. Results contain one recommended plan plus two alternatives and expose inputs, policy versions, validation results, source freshness, and assumptions.

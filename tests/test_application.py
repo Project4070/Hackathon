@@ -138,7 +138,7 @@ async def test_boundary_diagnostics_preserve_validation_reason_and_stage(
 
 
 @pytest.mark.asyncio
-async def test_unlisted_food_category_reaches_direct_source_lookup(
+async def test_unlisted_food_category_does_not_gate_direct_source_lookup(
     canonical_candidate, canonical_raw_text
 ):
     rice = SemanticTermV2(
@@ -157,11 +157,40 @@ async def test_unlisted_food_category_reaches_direct_source_lookup(
     )
 
     assert run.boundary_outcome.status == "ready_for_planning"
-    assert run.plan_result is not None and run.plan_result.failure is not None
-    assert run.plan_result.failure.status == "data_unavailable"
-    assert "rice" in run.plan_result.failure.reason
+    assert run.plan_result is not None and run.plan_result.display is not None
+    assert run.plan_result.failure is None
+    assert any(
+        "requested category and delivery location did not filter" in warning
+        for warning in run.plan_result.display.expected_outcome.uncertainties
+    )
     assert any(event.tool_name == "build_serving_input" for event in run.tool_events)
     assert any(event.tool_name == "search_menu_candidates" for event in run.tool_events)
+
+
+@pytest.mark.asyncio
+async def test_missing_food_category_does_not_block_planning(
+    canonical_candidate, canonical_raw_text
+):
+    food_scope = canonical_candidate.food_scope.model_copy(update={"requested_categories": []})
+    evidence = [
+        item
+        for item in canonical_candidate.evidence
+        if not item.field_path.startswith("/food_scope/requested_categories")
+    ]
+    candidate = canonical_candidate.model_copy(
+        update={"food_scope": food_scope, "evidence": evidence}
+    )
+
+    run = await run_group_food_agent(
+        canonical_raw_text,
+        ValidationContextV2(request_id="request-no-category", case_id="case-no-category"),
+        interpreter=FixedInterpreter(candidate),
+        live_planner=False,
+    )
+
+    assert run.boundary_outcome.status == "ready_for_planning"
+    assert run.plan_result is not None and run.plan_result.display is not None
+    assert run.diagnostics()["blocked"] is False
 
 
 @pytest.mark.asyncio
@@ -308,11 +337,12 @@ async def test_terse_korean_shrimp_request_runs_end_to_end(canonical_candidate):
 
     assert run.boundary_outcome.status == "ready_for_planning"
     assert run.plan_result is not None and run.plan_result.display is not None
-    assert run.plan_result.display.restaurant.restaurant_id == "restaurant-delta-shinnonhyeon"
     assert run.plan_result.display.recommended_plan.combination.total_cost_minor <= 220000
-    assert {line.menu_item_id for line in run.plan_result.display.recommended_plan.combination.lines} == {
-        "delta-grilled-shrimp-platter"
-    }
+    assert run.plan_result.failure is None
+    assert any(
+        "requested category and delivery location did not filter" in warning
+        for warning in run.plan_result.display.expected_outcome.uncertainties
+    )
     assumption_codes = {
         assumption.code for assumption in run.boundary_outcome.validation_receipt.assumptions
     }

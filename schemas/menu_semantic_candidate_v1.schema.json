@@ -50,11 +50,9 @@
       "type": "string"
     },
     "category_code": {
-      "enum": [
-        "chicken",
-        "pizza",
-        "unknown"
-      ],
+      "maxLength": 80,
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+$",
       "title": "Category Code",
       "type": "string"
     },

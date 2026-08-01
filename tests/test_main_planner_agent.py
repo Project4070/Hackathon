@@ -71,3 +71,48 @@ async def test_sdk_runner_resolves_only_the_trusted_terminal_artifact(monkeypatc
     assert captured["run_config"].trace_include_sensitive_data is False
     assert captured["run_config"].group_id == job.intake.case_id
     assert captured["run_config"].trace_metadata["logical_trace_id"] == "trace-canonical-15"
+
+
+@pytest.mark.asyncio
+async def test_wrong_type_failure_artifact_is_rejected_and_host_completes_plan(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    service = PlanningService()
+    job = build_canonical_job()
+    service.create_case(job)
+    serving_input = service.build_serving_input(job.intake.case_id)
+    serving = service.calculate_serving_requirement(
+        job.intake.case_id, serving_input.ref.artifact_id
+    )
+    candidates = service.search_menu_candidates(job.intake.case_id)
+    normalized = service.enrich_menu_semantics(
+        job.intake.case_id, candidates.ref.artifact_id
+    )
+    eligible = service.apply_hard_eligibility(
+        job.intake.case_id, normalized.ref.artifact_id
+    )
+    combinations = service.generate_budget_combinations(
+        job.intake.case_id,
+        eligible.ref.artifact_id,
+        serving.ref.artifact_id,
+    )
+
+    async def fake_runner(agent, prompt, context, max_turns, run_config):
+        return SimpleNamespace(
+            final_output=PlannerAgentFinalV1(
+                case_id=job.intake.case_id,
+                display_artifact_id=None,
+                failure_artifact_id=combinations.ref.artifact_id,
+                summary="Incorrectly treated an intermediate artifact as failure.",
+                recommendation_explanation="No recommendation.",
+                tradeoff_explanation="No tradeoff.",
+                uncertainty_explanation="Incorrect artifact selection.",
+            )
+        )
+
+    result = await run_agent_plan(service, job.intake.case_id, runner=fake_runner)
+
+    assert result.failure is None
+    assert result.display is not None and result.display.status == "plan_ready"
+    assert result.display_artifact_id is not None
+    assert result.agent_explanation is not None
+    assert "rejecting a non-terminal agent artifact ID" in result.agent_explanation.summary

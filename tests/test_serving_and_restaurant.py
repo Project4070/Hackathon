@@ -10,7 +10,7 @@ from group_food_agent.planner_models import CompletenessStatus, FreshnessStatus
 from group_food_agent.restaurant import (
     apply_hard_eligibility,
     enrich_menu_semantics,
-    load_restaurant_snapshot,
+    load_restaurant_source,
     sanitize_visible_text,
     search_menu_candidates,
 )
@@ -58,10 +58,10 @@ def test_serving_aliases_and_decimal_result(canonical_candidate, canonical_raw_t
 
 def test_unknown_allergen_evidence_never_becomes_safe(canonical_candidate, canonical_raw_text):
     intake = _intake(canonical_candidate, canonical_raw_text)
-    snapshot = load_restaurant_snapshot()
+    source = load_restaurant_source()
     candidates = search_menu_candidates(
         intake,
-        snapshot,
+        source,
         now=datetime(2026, 8, 2, tzinfo=timezone.utc),
         restaurant_limit=10,
     )
@@ -81,13 +81,13 @@ def test_unknown_allergen_evidence_never_becomes_safe(canonical_candidate, canon
     assert any("no verified peanut" in reason for reason in row.hard_exclusion_reasons)
 
 
-def test_direct_source_does_not_apply_cache_age(canonical_candidate, canonical_raw_text):
+def test_direct_source_does_not_apply_freshness_filter(canonical_candidate, canonical_raw_text):
     intake = _intake(canonical_candidate, canonical_raw_text)
-    snapshot = load_restaurant_snapshot()
+    source = load_restaurant_source()
     candidates = search_menu_candidates(
         intake,
-        snapshot,
-        now=snapshot.crawled_at + timedelta(days=2),
+        source,
+        now=source.crawled_at + timedelta(days=2),
         restaurant_limit=10,
     )
     assert candidates.freshness is FreshnessStatus.FRESH
@@ -98,12 +98,12 @@ def test_partial_snapshot_is_labeled_and_missing_fields_are_not_filled(
     canonical_candidate, canonical_raw_text
 ):
     intake = _intake(canonical_candidate, canonical_raw_text)
-    snapshot = load_restaurant_snapshot().model_copy(
+    source = load_restaurant_source().model_copy(
         update={"completeness": CompletenessStatus.PARTIAL}
     )
     candidates = search_menu_candidates(
         intake,
-        snapshot,
+        source,
         now=datetime(2026, 8, 2, tzinfo=timezone.utc),
         restaurant_limit=10,
     )
@@ -131,7 +131,7 @@ def test_pizza_size_change_uses_area_not_diameter():
     assert pizza_area_scaled_servings(28_000, 36_000, 3_000) == 4_959
 
 
-def test_restaurants_without_verified_delivery_area_are_excluded(
+def test_delivery_area_does_not_filter_direct_source(
     canonical_candidate, canonical_raw_text
 ):
     intake = _intake(canonical_candidate, canonical_raw_text)
@@ -148,10 +148,15 @@ def test_restaurants_without_verified_delivery_area_are_excluded(
     )
     changed = intake.model_copy(update={"profile": profile})
 
-    with pytest.raises(LookupError, match="no source-backed"):
-        search_menu_candidates(
-            changed,
-            load_restaurant_snapshot(),
-            now=datetime(2026, 8, 2, tzinfo=timezone.utc),
-            restaurant_limit=10,
-        )
+    candidates = search_menu_candidates(
+        changed,
+        load_restaurant_source(),
+        now=datetime(2026, 8, 2, tzinfo=timezone.utc),
+        restaurant_limit=10,
+    )
+
+    assert candidates.restaurants
+    assert any(
+        "requested category and delivery location did not filter" in warning
+        for warning in candidates.warnings
+    )

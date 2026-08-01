@@ -295,7 +295,7 @@ def _category_code(category: str, menu_name: str) -> str:
         return "chicken"
     if any(token in text for token in ("피자", "pizza")):
         return "pizza"
-    return "unknown"
+    return "other"
 
 
 def _semantic_provenance(text: str, source_url: str, observed_at: datetime) -> SemanticProvenanceV1:
@@ -448,8 +448,6 @@ def build_planner_restaurant_from_naver(
         restaurant_issues.append(_issue("missing_service_fee", "/service_fee_minor", "서비스 수수료가 확인되지 않았습니다.", "서비스 수수료를 명시한 보강 데이터를 제공하세요."))
     if estimated_delivery_minutes is None:
         restaurant_issues.append(_issue("missing_delivery_eta", "/estimated_delivery_minutes", "도착 예상 시간이 확인되지 않았습니다.", "도착 예상 시간을 별도 delivery source로 제공하세요."))
-    if _category_code(place.category, "") == "unknown":
-        restaurant_issues.append(_issue("unsupported_category", "/category", "현재 planner MVP는 chicken/pizza만 지원합니다.", "지원 카테고리의 지점을 선택하세요."))
     if not place.menus:
         restaurant_issues.append(_issue("missing_menu", "/menu_items", "메뉴가 확인되지 않았습니다.", "메뉴 상세 페이지를 다시 수집하세요."))
 
@@ -462,8 +460,6 @@ def build_planner_restaurant_from_naver(
             item_issues.append(_issue("missing_serving_evidence", "/menu_items/serving_evidence", "실용 제공량은 공개 메뉴 가격만으로 산출할 수 없습니다.", "공식 중량, 판매 단위 또는 검토된 serving evidence를 제공하세요."))
         if menu.source_menu_id not in shared_sale_units:
             item_issues.append(_issue("missing_sale_unit", "/menu_items/sale_unit", "메뉴 가격의 판매 단위가 확인되지 않았습니다.", "1인분, 판, 조각 등 명시된 판매 단위를 제공하세요."))
-        if _category_code(place.category, menu.name) == "unknown":
-            item_issues.append(_issue("unsupported_menu_category", "/menu_items/category_code", "메뉴가 chicken/pizza comparable family로 확인되지 않았습니다.", "메뉴 카테고리를 명시적으로 매핑하고 확인하세요."))
         if item_issues:
             restaurant_issues.extend(
                 _issue(issue.code, f"/menu_items/{menu.source_menu_id}{issue.field_path}", issue.reason, issue.corrective_action, severity=issue.severity)
