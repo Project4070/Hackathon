@@ -6,6 +6,8 @@ const notes = $("notes");
 const submitButton = $("submit-button");
 const demoButton = $("demo-button");
 const statusLine = $("form-status");
+const photoDrop = $("photo-drop");
+const submitArrow = submitButton.querySelector(".button-arrow");
 let previewUrl = null;
 let coordinates = null;
 let locationPermission = "unavailable";
@@ -28,10 +30,24 @@ function append(parent, ...children) {
 
 function confidence(value) {
   const badge = element("span", "confidence");
-  if (value >= .8) badge.textContent = `HIGH ${Math.round(value * 100)}%`;
-  else if (value >= .6) { badge.classList.add("medium"); badge.textContent = `MED ${Math.round(value * 100)}%`; }
-  else { badge.classList.add("low"); badge.textContent = `LOW ${Math.round(value * 100)}%`; }
+  if (value >= .8) badge.textContent = "신뢰도 높음";
+  else if (value >= .6) { badge.classList.add("medium"); badge.textContent = "신뢰도 보통"; }
+  else { badge.classList.add("low"); badge.textContent = "신뢰도 낮음"; }
   return badge;
+}
+
+function setStatus(message = "", state = "") {
+  statusLine.textContent = message;
+  if (state) statusLine.dataset.state = state;
+  else delete statusLine.dataset.state;
+}
+
+function setLoading(isLoading) {
+  submitButton.disabled = isLoading;
+  demoButton.disabled = isLoading;
+  photoInput.disabled = isLoading;
+  submitButton.dataset.loading = String(isLoading);
+  submitArrow.textContent = isLoading ? "↻" : "→";
 }
 
 function metric(label, value, extra) {
@@ -157,10 +173,10 @@ function render(data) {
 async function submit(runMode) {
   const file = photoInput.files[0];
   if (!file && !notes.value.trim() && runMode !== "offline_canonical") {
-    statusLine.textContent = "사진 또는 특별사항을 입력해 주세요."; notes.focus(); return;
+    setStatus("사진 또는 특별사항을 입력해 주세요.", "error"); notes.focus(); return;
   }
-  submitButton.disabled = true; demoButton.disabled = true; photoInput.disabled = true;
-  statusLine.textContent = runMode === "offline_canonical" ? "준비된 검증 경로를 실행하고 있습니다…" : "현장을 해석하고 검증된 주문 수량을 계산하고 있습니다…";
+  setLoading(true);
+  setStatus(runMode === "offline_canonical" ? "준비된 검증 경로를 실행하고 있습니다…" : "현장을 해석하고 검증된 주문 수량을 계산하고 있습니다…", "busy");
   const body = new FormData();
   if (file) body.append("photo", file);
   body.append("notes", notes.value);
@@ -173,11 +189,12 @@ async function submit(runMode) {
     const response = await fetch("/api/runs", { method: "POST", body });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.reason || `HTTP ${response.status}`);
-    render(data); statusLine.textContent = data.execution?.blocked ? "확인이 필요한 입력입니다." : "주문안 계산이 완료되었습니다.";
+    render(data);
+    setStatus(data.execution?.blocked ? "확인이 필요한 입력입니다." : "주문안 계산이 완료되었습니다.", data.execution?.blocked ? "error" : "success");
   } catch (error) {
-    statusLine.textContent = `실행 실패: ${error.message}`;
+    setStatus(`실행 실패: ${error.message}`, "error");
   } finally {
-    submitButton.disabled = false; demoButton.disabled = false; photoInput.disabled = false;
+    setLoading(false);
   }
 }
 
@@ -186,6 +203,30 @@ photoInput.addEventListener("change", () => {
   const file = photoInput.files[0];
   if (!file) { preview.hidden = true; $("remove-photo").hidden = true; return; }
   previewUrl = URL.createObjectURL(file); preview.src = previewUrl; preview.hidden = false; $("remove-photo").hidden = false;
+  setStatus(`${file.name} 준비 완료`, "success");
+});
+
+["dragenter", "dragover"].forEach((eventName) => photoDrop.addEventListener(eventName, (event) => {
+  event.preventDefault();
+  if (!photoInput.disabled) photoDrop.dataset.dragging = "true";
+}));
+
+["dragleave", "drop"].forEach((eventName) => photoDrop.addEventListener(eventName, (event) => {
+  event.preventDefault();
+  delete photoDrop.dataset.dragging;
+}));
+
+photoDrop.addEventListener("drop", (event) => {
+  if (photoInput.disabled) return;
+  const file = [...event.dataTransfer.files].find((item) => item.type.startsWith("image/"));
+  if (!file) {
+    setStatus("이미지 파일을 놓아 주세요.", "error");
+    return;
+  }
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  photoInput.files = transfer.files;
+  photoInput.dispatchEvent(new Event("change"));
 });
 $("remove-photo").addEventListener("click", () => { photoInput.value = ""; photoInput.dispatchEvent(new Event("change")); });
 notes.addEventListener("input", () => { $("char-count").textContent = `${notes.value.length.toLocaleString("ko-KR")} / 5,000`; });
