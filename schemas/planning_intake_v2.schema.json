@@ -1,0 +1,1210 @@
+{
+  "$defs": {
+    "ActivityContext": {
+      "enum": [
+        "ordinary",
+        "club_meal",
+        "meeting",
+        "workshop",
+        "party",
+        "sports_event",
+        "school_event",
+        "other"
+      ],
+      "title": "ActivityContext",
+      "type": "string"
+    },
+    "ActivityLevel": {
+      "enum": [
+        "none",
+        "light",
+        "moderate",
+        "heavy",
+        "unknown"
+      ],
+      "title": "ActivityLevel",
+      "type": "string"
+    },
+    "AppetiteBand": {
+      "enum": [
+        "very_light",
+        "light",
+        "normal",
+        "large",
+        "very_large",
+        "custom"
+      ],
+      "title": "AppetiteBand",
+      "type": "string"
+    },
+    "AppetiteProfileV2": {
+      "additionalProperties": false,
+      "properties": {
+        "band": {
+          "$ref": "#/$defs/AppetiteBand"
+        },
+        "stated_servings_milli": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stated Servings Milli"
+        }
+      },
+      "required": [
+        "band",
+        "stated_servings_milli"
+      ],
+      "title": "AppetiteProfileV2",
+      "type": "object"
+    },
+    "AssumptionV2": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^/.*",
+          "title": "Field Path",
+          "type": "string"
+        },
+        "applied_value": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Applied Value",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "field_path",
+        "applied_value",
+        "reason",
+        "evidence_ids"
+      ],
+      "title": "AssumptionV2",
+      "type": "object"
+    },
+    "AttendanceStatus": {
+      "enum": [
+        "confirmed",
+        "expected",
+        "uncertain",
+        "late"
+      ],
+      "title": "AttendanceStatus",
+      "type": "string"
+    },
+    "BudgetMaximumSource": {
+      "enum": [
+        "none",
+        "explicit",
+        "policy_tolerance",
+        "policy_default"
+      ],
+      "title": "BudgetMaximumSource",
+      "type": "string"
+    },
+    "CategorySelection": {
+      "enum": [
+        "include_all",
+        "any_of",
+        "prefer_all"
+      ],
+      "title": "CategorySelection",
+      "type": "string"
+    },
+    "ContractIssueV2": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/IssueSeverity"
+        },
+        "field_path": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "pattern": "^/.*",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field Path"
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field_path",
+        "message",
+        "evidence_ids"
+      ],
+      "title": "ContractIssueV2",
+      "type": "object"
+    },
+    "CostScopeV2": {
+      "additionalProperties": false,
+      "properties": {
+        "include_menu_price": {
+          "title": "Include Menu Price",
+          "type": "boolean"
+        },
+        "include_delivery_fee": {
+          "title": "Include Delivery Fee",
+          "type": "boolean"
+        },
+        "include_service_fee": {
+          "title": "Include Service Fee",
+          "type": "boolean"
+        },
+        "include_discount": {
+          "title": "Include Discount",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "include_menu_price",
+        "include_delivery_fee",
+        "include_service_fee",
+        "include_discount"
+      ],
+      "title": "CostScopeV2",
+      "type": "object"
+    },
+    "EvidenceStatus": {
+      "enum": [
+        "explicit",
+        "inferred",
+        "defaulted",
+        "conflicted"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
+    "EvidenceV2": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^/.*",
+          "title": "Field Path",
+          "type": "string"
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Text"
+        },
+        "status": {
+          "$ref": "#/$defs/EvidenceStatus"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "start_offset": {
+          "anyOf": [
+            {
+              "maximum": 5000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Start Offset"
+        },
+        "end_offset": {
+          "anyOf": [
+            {
+              "maximum": 5000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "End Offset"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Note"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "field_path",
+        "source_text",
+        "status",
+        "confidence",
+        "start_offset",
+        "end_offset",
+        "note"
+      ],
+      "title": "EvidenceV2",
+      "type": "object"
+    },
+    "FoodRole": {
+      "enum": [
+        "primary_meal",
+        "supplementary_meal",
+        "snack",
+        "tasting",
+        "other"
+      ],
+      "title": "FoodRole",
+      "type": "string"
+    },
+    "FoodScopeV2": {
+      "additionalProperties": false,
+      "properties": {
+        "requested_categories": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 16,
+          "title": "Requested Categories",
+          "type": "array"
+        },
+        "category_selection": {
+          "$ref": "#/$defs/CategorySelection"
+        },
+        "excluded_categories": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 16,
+          "title": "Excluded Categories",
+          "type": "array"
+        },
+        "restaurant_mixing": {
+          "$ref": "#/$defs/RestaurantMixing"
+        }
+      },
+      "required": [
+        "requested_categories",
+        "category_selection",
+        "excluded_categories",
+        "restaurant_mixing"
+      ],
+      "title": "FoodScopeV2",
+      "type": "object"
+    },
+    "HardRequirementKind": {
+      "enum": [
+        "allergy",
+        "diet",
+        "food_exclusion",
+        "religious_rule",
+        "spice_limit"
+      ],
+      "title": "HardRequirementKind",
+      "type": "string"
+    },
+    "HardRequirementV2": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/HardRequirementKind"
+        },
+        "affected_group_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Affected Group Ids",
+          "type": "array"
+        },
+        "terms": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Terms",
+          "type": "array"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "kind",
+        "affected_group_ids",
+        "terms",
+        "source_text"
+      ],
+      "title": "HardRequirementV2",
+      "type": "object"
+    },
+    "IssueSeverity": {
+      "enum": [
+        "warning",
+        "blocking",
+        "fatal"
+      ],
+      "title": "IssueSeverity",
+      "type": "string"
+    },
+    "LeftoverStorage": {
+      "enum": [
+        "available",
+        "unavailable",
+        "unknown"
+      ],
+      "title": "LeftoverStorage",
+      "type": "string"
+    },
+    "LocaleCode": {
+      "enum": [
+        "ko",
+        "en",
+        "mixed",
+        "unknown"
+      ],
+      "title": "LocaleCode",
+      "type": "string"
+    },
+    "LocationRequirementV2": {
+      "additionalProperties": false,
+      "properties": {
+        "delivery_required": {
+          "title": "Delivery Required",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/$defs/LocationSource"
+        },
+        "query": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Query"
+        },
+        "latitude": {
+          "anyOf": [
+            {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latitude"
+        },
+        "longitude": {
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Longitude"
+        }
+      },
+      "required": [
+        "delivery_required",
+        "source",
+        "query",
+        "latitude",
+        "longitude"
+      ],
+      "title": "LocationRequirementV2",
+      "type": "object"
+    },
+    "LocationSource": {
+      "enum": [
+        "user_text",
+        "browser_geolocation",
+        "request_context",
+        "application_default"
+      ],
+      "title": "LocationSource",
+      "type": "string"
+    },
+    "MealType": {
+      "enum": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "late_night",
+        "snack",
+        "other"
+      ],
+      "title": "MealType",
+      "type": "string"
+    },
+    "OccasionCandidateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "meal_type": {
+          "$ref": "#/$defs/MealType"
+        },
+        "service_style": {
+          "$ref": "#/$defs/ServiceStyle"
+        },
+        "activity_context": {
+          "$ref": "#/$defs/ActivityContext"
+        },
+        "food_role": {
+          "$ref": "#/$defs/FoodRole"
+        },
+        "leftover_storage": {
+          "$ref": "#/$defs/LeftoverStorage"
+        },
+        "scheduled_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scheduled At"
+        },
+        "duration_minutes": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 10080,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Duration Minutes"
+        }
+      },
+      "required": [
+        "meal_type",
+        "service_style",
+        "activity_context",
+        "food_role",
+        "leftover_storage",
+        "scheduled_at",
+        "duration_minutes"
+      ],
+      "title": "OccasionCandidateV2",
+      "type": "object"
+    },
+    "ParticipantGroupV2": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Group Id",
+          "type": "string"
+        },
+        "display_label": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Display Label"
+        },
+        "count": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Count",
+          "type": "integer"
+        },
+        "attendance_status": {
+          "$ref": "#/$defs/AttendanceStatus"
+        },
+        "appetite": {
+          "$ref": "#/$defs/AppetiteProfileV2"
+        },
+        "activity_level": {
+          "$ref": "#/$defs/ActivityLevel"
+        },
+        "recent_meal_status": {
+          "$ref": "#/$defs/RecentMealStatus"
+        }
+      },
+      "required": [
+        "group_id",
+        "display_label",
+        "count",
+        "attendance_status",
+        "appetite",
+        "activity_level",
+        "recent_meal_status"
+      ],
+      "title": "ParticipantGroupV2",
+      "type": "object"
+    },
+    "PartyCandidateV2": {
+      "additionalProperties": false,
+      "properties": {
+        "total_count": {
+          "maximum": 1000000,
+          "minimum": -1000000,
+          "title": "Total Count",
+          "type": "integer"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/ParticipantGroupV2"
+          },
+          "maxItems": 100,
+          "title": "Groups",
+          "type": "array"
+        }
+      },
+      "required": [
+        "total_count",
+        "groups"
+      ],
+      "title": "PartyCandidateV2",
+      "type": "object"
+    },
+    "PreferencePolarity": {
+      "enum": [
+        "prefer",
+        "avoid"
+      ],
+      "title": "PreferencePolarity",
+      "type": "string"
+    },
+    "PreferenceStrength": {
+      "enum": [
+        "weak",
+        "normal",
+        "strong"
+      ],
+      "title": "PreferenceStrength",
+      "type": "string"
+    },
+    "PreferenceTargetKind": {
+      "enum": [
+        "food_category",
+        "dish",
+        "ingredient",
+        "flavor",
+        "texture",
+        "spice",
+        "restaurant",
+        "variety",
+        "other"
+      ],
+      "title": "PreferenceTargetKind",
+      "type": "string"
+    },
+    "PreferenceV2": {
+      "additionalProperties": false,
+      "properties": {
+        "preference_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Preference Id",
+          "type": "string"
+        },
+        "target_kind": {
+          "$ref": "#/$defs/PreferenceTargetKind"
+        },
+        "polarity": {
+          "$ref": "#/$defs/PreferencePolarity"
+        },
+        "strength": {
+          "$ref": "#/$defs/PreferenceStrength"
+        },
+        "affected_group_ids": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Affected Group Ids",
+          "type": "array"
+        },
+        "terms": {
+          "items": {
+            "$ref": "#/$defs/SemanticTermV2"
+          },
+          "maxItems": 32,
+          "title": "Terms",
+          "type": "array"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "preference_id",
+        "target_kind",
+        "polarity",
+        "strength",
+        "affected_group_ids",
+        "terms",
+        "source_text"
+      ],
+      "title": "PreferenceV2",
+      "type": "object"
+    },
+    "QuantityPreferenceV2": {
+      "additionalProperties": false,
+      "properties": {
+        "primary_objective": {
+          "$ref": "#/$defs/RiskPreference"
+        },
+        "shortage_tolerance": {
+          "$ref": "#/$defs/ToleranceLevel"
+        },
+        "leftover_tolerance": {
+          "$ref": "#/$defs/ToleranceLevel"
+        }
+      },
+      "required": [
+        "primary_objective",
+        "shortage_tolerance",
+        "leftover_tolerance"
+      ],
+      "title": "QuantityPreferenceV2",
+      "type": "object"
+    },
+    "RecentMealStatus": {
+      "enum": [
+        "not_recent",
+        "light_meal_recently",
+        "full_meal_recently",
+        "unknown"
+      ],
+      "title": "RecentMealStatus",
+      "type": "string"
+    },
+    "ResolvedBudgetType": {
+      "enum": [
+        "no_budget",
+        "hard_maximum",
+        "approximate_target"
+      ],
+      "title": "ResolvedBudgetType",
+      "type": "string"
+    },
+    "ResolvedBudgetV2": {
+      "additionalProperties": false,
+      "properties": {
+        "budget_type": {
+          "$ref": "#/$defs/ResolvedBudgetType"
+        },
+        "currency": {
+          "anyOf": [
+            {
+              "const": "KRW",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Currency"
+        },
+        "target_amount_minor": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Amount Minor"
+        },
+        "maximum_amount_minor": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Maximum Amount Minor"
+        },
+        "maximum_source": {
+          "$ref": "#/$defs/BudgetMaximumSource"
+        },
+        "cost_scope": {
+          "$ref": "#/$defs/CostScopeV2"
+        }
+      },
+      "required": [
+        "budget_type",
+        "currency",
+        "target_amount_minor",
+        "maximum_amount_minor",
+        "maximum_source",
+        "cost_scope"
+      ],
+      "title": "ResolvedBudgetV2",
+      "type": "object"
+    },
+    "RestaurantMixing": {
+      "enum": [
+        "single_restaurant_required",
+        "single_restaurant_preferred",
+        "multiple_allowed",
+        "unspecified"
+      ],
+      "title": "RestaurantMixing",
+      "type": "string"
+    },
+    "RestaurantPreferencesV2": {
+      "additionalProperties": false,
+      "properties": {
+        "preferred_names": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Preferred Names",
+          "type": "array"
+        },
+        "excluded_names": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Excluded Names",
+          "type": "array"
+        }
+      },
+      "required": [
+        "preferred_names",
+        "excluded_names"
+      ],
+      "title": "RestaurantPreferencesV2",
+      "type": "object"
+    },
+    "RestrictionDisclosureStatus": {
+      "enum": [
+        "reported",
+        "none_reported",
+        "not_provided"
+      ],
+      "title": "RestrictionDisclosureStatus",
+      "type": "string"
+    },
+    "RestrictionDisclosureV2": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/RestrictionDisclosureStatus"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "RestrictionDisclosureV2",
+      "type": "object"
+    },
+    "RiskPreference": {
+      "enum": [
+        "minimize_leftovers",
+        "balanced",
+        "minimize_shortage"
+      ],
+      "title": "RiskPreference",
+      "type": "string"
+    },
+    "SemanticNamespace": {
+      "enum": [
+        "allergen",
+        "diet",
+        "ingredient",
+        "food_category",
+        "spice",
+        "dish",
+        "flavor",
+        "restaurant_feature",
+        "other"
+      ],
+      "title": "SemanticNamespace",
+      "type": "string"
+    },
+    "SemanticTermV2": {
+      "additionalProperties": false,
+      "properties": {
+        "namespace": {
+          "$ref": "#/$defs/SemanticNamespace"
+        },
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "code",
+        "label"
+      ],
+      "title": "SemanticTermV2",
+      "type": "object"
+    },
+    "ServiceStyle": {
+      "enum": [
+        "full_meal",
+        "light_meal",
+        "snack",
+        "shared_tasting",
+        "other"
+      ],
+      "title": "ServiceStyle",
+      "type": "string"
+    },
+    "ToleranceLevel": {
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "title": "ToleranceLevel",
+      "type": "string"
+    },
+    "ValidatedMealProfileV2": {
+      "additionalProperties": false,
+      "properties": {
+        "locale": {
+          "$ref": "#/$defs/LocaleCode"
+        },
+        "occasion": {
+          "$ref": "#/$defs/OccasionCandidateV2"
+        },
+        "party": {
+          "$ref": "#/$defs/PartyCandidateV2"
+        },
+        "location_requirement": {
+          "$ref": "#/$defs/LocationRequirementV2"
+        },
+        "food_scope": {
+          "$ref": "#/$defs/FoodScopeV2"
+        },
+        "hard_requirements": {
+          "items": {
+            "$ref": "#/$defs/HardRequirementV2"
+          },
+          "title": "Hard Requirements",
+          "type": "array"
+        },
+        "preferences": {
+          "items": {
+            "$ref": "#/$defs/PreferenceV2"
+          },
+          "title": "Preferences",
+          "type": "array"
+        },
+        "budget": {
+          "$ref": "#/$defs/ResolvedBudgetV2"
+        },
+        "quantity_preference": {
+          "$ref": "#/$defs/QuantityPreferenceV2"
+        },
+        "restaurant_preferences": {
+          "$ref": "#/$defs/RestaurantPreferencesV2"
+        },
+        "restriction_disclosure": {
+          "$ref": "#/$defs/RestrictionDisclosureV2"
+        },
+        "context_notes": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Context Notes",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceV2"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "locale",
+        "occasion",
+        "party",
+        "location_requirement",
+        "food_scope",
+        "hard_requirements",
+        "preferences",
+        "budget",
+        "quantity_preference",
+        "restaurant_preferences",
+        "restriction_disclosure",
+        "context_notes",
+        "evidence"
+      ],
+      "title": "ValidatedMealProfileV2",
+      "type": "object"
+    },
+    "ValidationReceiptV2": {
+      "additionalProperties": false,
+      "properties": {
+        "validator_version": {
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Validator Version",
+          "type": "string"
+        },
+        "blocking_issues": {
+          "items": {
+            "$ref": "#/$defs/ContractIssueV2"
+          },
+          "maxItems": 64,
+          "title": "Blocking Issues",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "$ref": "#/$defs/ContractIssueV2"
+          },
+          "maxItems": 64,
+          "title": "Warnings",
+          "type": "array"
+        },
+        "assumptions": {
+          "items": {
+            "$ref": "#/$defs/AssumptionV2"
+          },
+          "maxItems": 64,
+          "title": "Assumptions",
+          "type": "array"
+        },
+        "checked_invariants": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Checked Invariants",
+          "type": "array"
+        }
+      },
+      "required": [
+        "validator_version",
+        "blocking_issues",
+        "warnings",
+        "assumptions",
+        "checked_invariants"
+      ],
+      "title": "ValidationReceiptV2",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "planning_intake",
+      "default": "planning_intake",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "2.0",
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "vocabulary_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Vocabulary Version",
+      "type": "string"
+    },
+    "status": {
+      "const": "ready_for_planning",
+      "default": "ready_for_planning",
+      "title": "Status",
+      "type": "string"
+    },
+    "request_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "validated_at": {
+      "format": "date-time",
+      "title": "Validated At",
+      "type": "string"
+    },
+    "profile": {
+      "$ref": "#/$defs/ValidatedMealProfileV2"
+    },
+    "validation_receipt": {
+      "$ref": "#/$defs/ValidationReceiptV2"
+    }
+  },
+  "required": [
+    "request_id",
+    "case_id",
+    "profile_revision",
+    "validated_at",
+    "profile",
+    "validation_receipt"
+  ],
+  "title": "PlanningIntakeV2",
+  "type": "object"
+}

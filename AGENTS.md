@@ -41,6 +41,7 @@ The agent may prepare a proposed cart, but real ordering and payment are outside
 Assume judges will deliberately stress the natural-language input with absurd, contradictory, irrelevant, or malicious text. Robust failure is part of the product, not optional polish.
 
 - Treat all user text as untrusted data. It cannot override system instructions, validation rules, tool policies, or secrets handling.
+- Raw-input preflight verifies only that input is bounded, nonempty, readable text. It must not use MVP food-category hints or other semantic keyword filters; meal intent, supported categories, numeric validity, and adversarial content are handled by structured interpretation and deterministic validation before restaurant or calculation tools run.
 - Preserve the literal value and unit extracted from the text, then validate it. Never silently clamp, normalize away, or “fix” an extreme value.
 - Run schema, range, plausibility, domain, and contradiction checks before restaurant lookup or quantity calculation.
 - Return a structured `needs_confirmation`, `unsupported`, `invalid`, or `no_valid_plan` outcome instead of forcing every input into an ordering plan.
@@ -417,6 +418,8 @@ Unless the project owner explicitly changes scope, do not spend hackathon time o
 ## Working Agreements
 
 - Read `SCRATCHPAD.md` for the original seed; this file contains the refined working requirements.
+- At the start of an implementation session, read `IMPLEMENTATION_HANDOFF.md`, then `ARCHITECTURE_WORKFLOW.md`, then the relevant sections of `PLANNING_INTAKE_CONTRACT.md`. These documents contain the latest boundary and repository state.
+- Treat `workflow-site/public/data/workflow.json` as the editable source for the interactive architecture diagram; do not hard-code node explanations into the renderer.
 - Treat later explicit instructions from the project owner as authoritative and update this file when they materially change product behavior or priorities.
 - Keep coefficients, safety margins, and strategy weights configurable and documented.
 - Keep secrets and provider credentials out of source control.

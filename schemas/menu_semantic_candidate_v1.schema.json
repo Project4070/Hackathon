@@ -1,0 +1,132 @@
+{
+  "$defs": {
+    "ConfidenceLabel": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "SemanticFieldStatus": {
+      "enum": [
+        "explicit",
+        "normalized",
+        "inferred",
+        "ambiguous"
+      ],
+      "title": "SemanticFieldStatus",
+      "type": "string"
+    },
+    "SpiceLevel": {
+      "enum": [
+        "none",
+        "mild",
+        "medium",
+        "hot",
+        "unknown"
+      ],
+      "title": "SpiceLevel",
+      "type": "string"
+    },
+    "VegetarianStatus": {
+      "enum": [
+        "explicit_yes",
+        "explicit_no",
+        "inferred",
+        "unknown"
+      ],
+      "title": "VegetarianStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "normalized_name": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Normalized Name",
+      "type": "string"
+    },
+    "category_code": {
+      "enum": [
+        "chicken",
+        "pizza",
+        "unknown"
+      ],
+      "title": "Category Code",
+      "type": "string"
+    },
+    "variant_codes": {
+      "items": {
+        "maxLength": 80,
+        "pattern": "^[a-z0-9_]+$",
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Variant Codes",
+      "type": "array"
+    },
+    "vegetarian_status": {
+      "$ref": "#/$defs/VegetarianStatus"
+    },
+    "vegetarian_evidence_phrase": {
+      "anyOf": [
+        {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Vegetarian Evidence Phrase"
+    },
+    "spice_level": {
+      "$ref": "#/$defs/SpiceLevel"
+    },
+    "serving_cue_phrase": {
+      "anyOf": [
+        {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Serving Cue Phrase"
+    },
+    "status": {
+      "$ref": "#/$defs/SemanticFieldStatus"
+    },
+    "confidence": {
+      "$ref": "#/$defs/ConfidenceLabel"
+    },
+    "ambiguity_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Ambiguity Reasons",
+      "type": "array"
+    }
+  },
+  "required": [
+    "normalized_name",
+    "category_code",
+    "variant_codes",
+    "vegetarian_status",
+    "vegetarian_evidence_phrase",
+    "spice_level",
+    "serving_cue_phrase",
+    "status",
+    "confidence",
+    "ambiguity_reasons"
+  ],
+  "title": "MenuSemanticCandidateV1",
+  "type": "object"
+}

@@ -1,0 +1,269 @@
+{
+  "$defs": {
+    "CrawlPageReceiptV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(success|timeout|fetch_error|parse_error)$",
+          "title": "Status",
+          "type": "string"
+        },
+        "attempt_count": {
+          "maximum": 2,
+          "minimum": 1,
+          "title": "Attempt Count",
+          "type": "integer"
+        },
+        "visible_text_hash": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 64,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Visible Text Hash"
+        },
+        "warning": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Warning"
+        }
+      },
+      "required": [
+        "source_url",
+        "status",
+        "attempt_count",
+        "visible_text_hash",
+        "warning"
+      ],
+      "title": "CrawlPageReceiptV1",
+      "type": "object"
+    },
+    "RawMenuRecordV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_menu_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Menu Id"
+        },
+        "original_text": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Original Text",
+          "type": "string"
+        },
+        "explicit_name": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Explicit Name"
+        },
+        "explicit_price_minor": {
+          "anyOf": [
+            {
+              "maximum": 10000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Explicit Price Minor"
+        },
+        "explicit_sale_unit": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Explicit Sale Unit"
+        }
+      },
+      "required": [
+        "source_menu_id",
+        "original_text",
+        "explicit_name",
+        "explicit_price_minor",
+        "explicit_sale_unit"
+      ],
+      "title": "RawMenuRecordV1",
+      "type": "object"
+    },
+    "RawRestaurantRecordV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Source Restaurant Id",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "branch": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Branch",
+          "type": "string"
+        },
+        "address": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Address",
+          "type": "string"
+        },
+        "visible_text_hash": {
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Visible Text Hash",
+          "type": "string"
+        },
+        "menu_records": {
+          "items": {
+            "$ref": "#/$defs/RawMenuRecordV1"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Menu Records",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_restaurant_id",
+        "source_url",
+        "name",
+        "branch",
+        "address",
+        "visible_text_hash",
+        "menu_records"
+      ],
+      "title": "RawRestaurantRecordV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "default": "raw_crawl_batch",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "location_query": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Location Query",
+      "type": "string"
+    },
+    "crawled_at": {
+      "format": "date-time",
+      "title": "Crawled At",
+      "type": "string"
+    },
+    "parser_version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Parser Version",
+      "type": "string"
+    },
+    "completeness": {
+      "pattern": "^(complete|partial)$",
+      "title": "Completeness",
+      "type": "string"
+    },
+    "records": {
+      "items": {
+        "$ref": "#/$defs/RawRestaurantRecordV1"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Records",
+      "type": "array"
+    },
+    "page_receipts": {
+      "items": {
+        "$ref": "#/$defs/CrawlPageReceiptV1"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Page Receipts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "location_query",
+    "crawled_at",
+    "parser_version",
+    "completeness",
+    "records",
+    "page_receipts",
+    "warnings"
+  ],
+  "title": "RawCrawlBatchV1",
+  "type": "object"
+}

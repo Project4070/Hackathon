@@ -7,6 +7,16 @@
 
 이 문서는 [통합 영문·국문 버전](WORK_ALLOCATION.md)의 독립된 한국어판이다. 공식 대회 규칙을 최우선으로 적용하고, 그다음 [AGENTS.md](AGENTS.md), [PRD 한국어판](PRD_KO.md), 이 업무 분담 문서 순으로 따른다.
 
+## 최신 통합 책임 변경
+
+초기 역할표 이후 구현 경계가 다음과 같이 구체화되었다.
+
+- 상류 팀원은 1–4단계인 원시 입력 preflight, Interpreter Agent 출력, candidate 스키마 작성, 결정적 프로필 검증을 담당한다.
+- 프로젝트 소유자이자 현재 하류 개발자는 5–10단계인 인분수 계산기 어댑터, 식당·메뉴 조회, 의미 보강, hard filter, 예산 조합 생성, soft scoring, 최종 검증, 표시 payload를 담당한다.
+- 세 번째 개발자는 상대적으로 가벼운 UI·데모·품질 역할을 유지하며, 안정된 tool event와 `DisplayPlanV1`에 연동한다. 백엔드 계산을 UI에서 중복 구현하지 않는다.
+
+팀 간 경계는 `PLANNING_INTAKE_CONTRACT.md`이고, 최신 실행 순서는 `IMPLEMENTATION_HANDOFF.md`와 `ARCHITECTURE_WORKFLOW.md`를 따른다. 아래의 과거 세부 항목과 충돌할 경우 이 변경 사항이 우선한다.
+
 공식 참고 자료:
 
 - [해커톤 개요와 발표 형식](https://yonsei-yai-hackathon.netlify.app/)
@@ -382,4 +392,3 @@ UI는 목 JSON과 실제 에이전트 응답 모두에서 동일한 `PlanningRes
 6. 추가 변경 시나리오와 시각적 장식.
 
 검토된 크롤러 기반 스냅샷, 정규화된 캐시 조회, 결정론적 계산기, OpenAI 도구 오케스트레이션, Raw Event Stream, 식당 변경 재계산, 식이 제한 검증, 안정적인 배포 데모는 제거하지 않는다.
-

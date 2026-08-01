@@ -9,6 +9,16 @@ This is the execution plan for the remaining hackathon window. The official hack
 
 Standalone Korean version: [WORK_ALLOCATION_KO.md](WORK_ALLOCATION_KO.md)
 
+## Latest integration ownership update
+
+The implementation boundary was refined after this original role plan:
+
+- The upstream teammate owns Steps 1–4: raw-input preflight, Interpreter Agent output, candidate schema population, and deterministic profile validation.
+- The project owner/current downstream developer owns Steps 5–10: serving-calculator adapter, restaurant/menu lookup, semantic enrichment, hard filtering, budget combination generation, soft scoring, final validation, and presentation payload.
+- The third developer retains the lighter UI/demo/quality role and should integrate against the stable tool events and `DisplayPlanV1`, not duplicate backend calculations.
+
+`PLANNING_INTAKE_CONTRACT.md` is the handoff boundary. `IMPLEMENTATION_HANDOFF.md` and `ARCHITECTURE_WORKFLOW.md` contain the current execution order. This update overrides any older task bullets below that assign the same component differently; the broader quality, crawler, UI, and demo responsibilities still apply.
+
 Official references:
 
 - [Hackathon overview and presentation format](https://yonsei-yai-hackathon.netlify.app/)
@@ -392,6 +402,16 @@ Never cut the reviewed crawler-produced snapshot, normalized cached lookup, dete
 ---
 
 # 한국어
+
+## 최신 통합 책임 변경
+
+초기 역할표 이후 구현 경계가 다음과 같이 구체화되었다.
+
+- 상류 팀원은 1–4단계인 원시 입력 preflight, Interpreter Agent 출력, candidate 스키마 작성, 결정적 프로필 검증을 담당한다.
+- 프로젝트 소유자이자 현재 하류 개발자는 5–10단계인 인분수 계산기 어댑터, 식당·메뉴 조회, 의미 보강, hard filter, 예산 조합 생성, soft scoring, 최종 검증, 표시 payload를 담당한다.
+- 세 번째 개발자는 상대적으로 가벼운 UI·데모·품질 역할을 유지하며, 안정된 tool event와 `DisplayPlanV1`에 연동한다. 백엔드 계산을 UI에서 중복 구현하지 않는다.
+
+팀 간 경계는 `PLANNING_INTAKE_CONTRACT.md`이고, 최신 실행 순서는 `IMPLEMENTATION_HANDOFF.md`와 `ARCHITECTURE_WORKFLOW.md`를 따른다. 아래의 과거 세부 항목과 충돌할 경우 이 변경 사항이 우선한다.
 
 ## 1. 팀이 만드는 것
 

@@ -1,0 +1,589 @@
+{
+  "$defs": {
+    "AvailabilityStatus": {
+      "enum": [
+        "available",
+        "unavailable",
+        "unknown"
+      ],
+      "title": "AvailabilityStatus",
+      "type": "string"
+    },
+    "CompletenessStatus": {
+      "enum": [
+        "complete",
+        "partial"
+      ],
+      "title": "CompletenessStatus",
+      "type": "string"
+    },
+    "ConfidenceLabel": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "DataMode": {
+      "enum": [
+        "crawler_live",
+        "crawler_cache",
+        "stale_cache",
+        "simulated_reviewed_fixture"
+      ],
+      "title": "DataMode",
+      "type": "string"
+    },
+    "MenuItemV1": {
+      "additionalProperties": false,
+      "properties": {
+        "menu_item_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Menu Item Id",
+          "type": "string"
+        },
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "original_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Original Text",
+          "type": "string"
+        },
+        "category_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Category Code",
+          "type": "string"
+        },
+        "price_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Price Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "const": "KRW",
+          "default": "KRW",
+          "title": "Currency",
+          "type": "string"
+        },
+        "sale_unit": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Sale Unit",
+          "type": "string"
+        },
+        "piece_count": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Piece Count"
+        },
+        "pizza_diameter_cm_milli": {
+          "anyOf": [
+            {
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pizza Diameter Cm Milli"
+        },
+        "slice_count": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Slice Count"
+        },
+        "vegetarian_status": {
+          "$ref": "#/$defs/VegetarianStatus"
+        },
+        "verified_free_allergens": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Verified Free Allergens",
+          "type": "array"
+        },
+        "allergen_tags": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Allergen Tags",
+          "type": "array"
+        },
+        "spice_level": {
+          "$ref": "#/$defs/SpiceLevel"
+        },
+        "availability": {
+          "$ref": "#/$defs/AvailabilityStatus"
+        },
+        "serving_evidence": {
+          "$ref": "#/$defs/ServingEvidenceV1"
+        },
+        "semantic_provenance": {
+          "$ref": "#/$defs/SemanticProvenanceV1"
+        },
+        "inferred_tags": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Inferred Tags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "menu_item_id",
+        "restaurant_id",
+        "name",
+        "original_text",
+        "category_code",
+        "price_minor",
+        "sale_unit",
+        "piece_count",
+        "pizza_diameter_cm_milli",
+        "slice_count",
+        "vegetarian_status",
+        "verified_free_allergens",
+        "allergen_tags",
+        "spice_level",
+        "availability",
+        "serving_evidence",
+        "semantic_provenance",
+        "inferred_tags"
+      ],
+      "title": "MenuItemV1",
+      "type": "object"
+    },
+    "RestaurantV1": {
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "source_restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Source Restaurant Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "branch": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Branch",
+          "type": "string"
+        },
+        "address": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Address",
+          "type": "string"
+        },
+        "latitude": {
+          "anyOf": [
+            {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latitude"
+        },
+        "longitude": {
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Longitude"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "delivery_queries": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Delivery Queries",
+          "type": "array"
+        },
+        "minimum_order_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Minimum Order Minor",
+          "type": "integer"
+        },
+        "delivery_fee_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Delivery Fee Minor",
+          "type": "integer"
+        },
+        "service_fee_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Service Fee Minor",
+          "type": "integer"
+        },
+        "estimated_delivery_minutes": {
+          "maximum": 600,
+          "minimum": 1,
+          "title": "Estimated Delivery Minutes",
+          "type": "integer"
+        },
+        "availability": {
+          "$ref": "#/$defs/AvailabilityStatus"
+        },
+        "menu_items": {
+          "items": {
+            "$ref": "#/$defs/MenuItemV1"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Menu Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "restaurant_id",
+        "source_restaurant_id",
+        "name",
+        "branch",
+        "address",
+        "latitude",
+        "longitude",
+        "source_url",
+        "delivery_queries",
+        "minimum_order_minor",
+        "delivery_fee_minor",
+        "service_fee_minor",
+        "estimated_delivery_minutes",
+        "availability",
+        "menu_items"
+      ],
+      "title": "RestaurantV1",
+      "type": "object"
+    },
+    "SemanticFieldStatus": {
+      "enum": [
+        "explicit",
+        "normalized",
+        "inferred",
+        "ambiguous"
+      ],
+      "title": "SemanticFieldStatus",
+      "type": "string"
+    },
+    "SemanticProvenanceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SemanticFieldStatus"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Model"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt Version"
+        },
+        "source_content_hash": {
+          "maxLength": 128,
+          "minLength": 8,
+          "title": "Source Content Hash",
+          "type": "string"
+        },
+        "enriched_at": {
+          "format": "date-time",
+          "title": "Enriched At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_text",
+        "source_url",
+        "status",
+        "confidence",
+        "model",
+        "prompt_version",
+        "source_content_hash",
+        "enriched_at"
+      ],
+      "title": "SemanticProvenanceV1",
+      "type": "object"
+    },
+    "ServingEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "practical_servings_min_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Practical Servings Min Milli",
+          "type": "integer"
+        },
+        "practical_servings_max_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Practical Servings Max Milli",
+          "type": "integer"
+        },
+        "selected_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Selected Servings Milli",
+          "type": "integer"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "observation_count": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Observation Count",
+          "type": "integer"
+        },
+        "reviewed": {
+          "title": "Reviewed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_url",
+        "source_text",
+        "practical_servings_min_milli",
+        "practical_servings_max_milli",
+        "selected_servings_milli",
+        "confidence",
+        "observation_count",
+        "reviewed"
+      ],
+      "title": "ServingEvidenceV1",
+      "type": "object"
+    },
+    "SpiceLevel": {
+      "enum": [
+        "none",
+        "mild",
+        "medium",
+        "hot",
+        "unknown"
+      ],
+      "title": "SpiceLevel",
+      "type": "string"
+    },
+    "VegetarianStatus": {
+      "enum": [
+        "explicit_yes",
+        "explicit_no",
+        "inferred",
+        "unknown"
+      ],
+      "title": "VegetarianStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "restaurant_snapshot",
+      "default": "restaurant_snapshot",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "source_url": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Source Url",
+      "type": "string"
+    },
+    "crawled_at": {
+      "format": "date-time",
+      "title": "Crawled At",
+      "type": "string"
+    },
+    "parser_version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Parser Version",
+      "type": "string"
+    },
+    "completeness": {
+      "$ref": "#/$defs/CompletenessStatus"
+    },
+    "data_mode": {
+      "$ref": "#/$defs/DataMode"
+    },
+    "reviewed": {
+      "title": "Reviewed",
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Warnings",
+      "type": "array"
+    },
+    "restaurants": {
+      "items": {
+        "$ref": "#/$defs/RestaurantV1"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Restaurants",
+      "type": "array"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "source_url",
+    "crawled_at",
+    "parser_version",
+    "completeness",
+    "data_mode",
+    "reviewed",
+    "warnings",
+    "restaurants"
+  ],
+  "title": "RestaurantSnapshotV1",
+  "type": "object"
+}

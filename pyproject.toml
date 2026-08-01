@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "group-food-agent"
+version = "0.1.0"
+description = "Observable OpenAI Agents SDK Group Food Quantity Agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "openai-agents==0.19.2",
+  "pydantic>=2.12,<3",
+  "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4,<10",
+  "pytest-asyncio>=1.2,<2",
+]
+
+[project.scripts]
+group-food-intake = "group_food_agent.cli:main"
+group-food-demo = "group_food_agent.demo_cli:main"
+group-food-agent = "group_food_agent.full_cli:main"
+group-food-schemas = "group_food_agent.schemas:main"
+group-food-trace = "group_food_agent.trace_cli:main"
+group-food-http = "group_food_agent.http_api:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/group_food_agent"]
+
+[tool.pytest.ini_options]
+addopts = "-q --basetemp=.pytest_tmp"
+asyncio_mode = "auto"
+testpaths = ["tests"]

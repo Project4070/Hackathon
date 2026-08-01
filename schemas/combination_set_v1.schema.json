@@ -1,0 +1,289 @@
+{
+  "$defs": {
+    "CombinationLineV1": {
+      "additionalProperties": false,
+      "properties": {
+        "menu_item_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Menu Item Id",
+          "type": "string"
+        },
+        "quantity": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Quantity",
+          "type": "integer"
+        },
+        "unit_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Unit Servings Milli",
+          "type": "integer"
+        },
+        "line_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Line Servings Milli",
+          "type": "integer"
+        },
+        "unit_price_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Unit Price Minor",
+          "type": "integer"
+        },
+        "line_price_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Line Price Minor",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "menu_item_id",
+        "quantity",
+        "unit_servings_milli",
+        "line_servings_milli",
+        "unit_price_minor",
+        "line_price_minor"
+      ],
+      "title": "CombinationLineV1",
+      "type": "object"
+    },
+    "OrderCombinationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "combination_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Combination Id",
+          "type": "string"
+        },
+        "strategy": {
+          "$ref": "#/$defs/PlanStrategy"
+        },
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/CombinationLineV1"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Lines",
+          "type": "array"
+        },
+        "target_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Target Servings Milli",
+          "type": "integer"
+        },
+        "total_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Total Servings Milli",
+          "type": "integer"
+        },
+        "surplus_servings_milli": {
+          "maximum": 10000000,
+          "minimum": -10000000,
+          "title": "Surplus Servings Milli",
+          "type": "integer"
+        },
+        "item_subtotal_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Item Subtotal Minor",
+          "type": "integer"
+        },
+        "fees_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Fees Minor",
+          "type": "integer"
+        },
+        "total_cost_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Total Cost Minor",
+          "type": "integer"
+        },
+        "budget_evaluated_cost_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Budget Evaluated Cost Minor",
+          "type": "integer"
+        },
+        "validation": {
+          "$ref": "#/$defs/PlanValidationV1"
+        }
+      },
+      "required": [
+        "combination_id",
+        "strategy",
+        "restaurant_id",
+        "lines",
+        "target_servings_milli",
+        "total_servings_milli",
+        "surplus_servings_milli",
+        "item_subtotal_minor",
+        "fees_minor",
+        "total_cost_minor",
+        "budget_evaluated_cost_minor",
+        "validation"
+      ],
+      "title": "OrderCombinationV1",
+      "type": "object"
+    },
+    "PlanStrategy": {
+      "enum": [
+        "leftover_minimizing",
+        "balanced",
+        "shortage_minimizing"
+      ],
+      "title": "PlanStrategy",
+      "type": "string"
+    },
+    "PlanValidationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "hard_constraints_passed": {
+          "title": "Hard Constraints Passed",
+          "type": "boolean"
+        },
+        "group_coverage_passed": {
+          "title": "Group Coverage Passed",
+          "type": "boolean"
+        },
+        "quantity_passed": {
+          "title": "Quantity Passed",
+          "type": "boolean"
+        },
+        "budget_passed": {
+          "title": "Budget Passed",
+          "type": "boolean"
+        },
+        "delivery_passed": {
+          "title": "Delivery Passed",
+          "type": "boolean"
+        },
+        "minimum_order_passed": {
+          "title": "Minimum Order Passed",
+          "type": "boolean"
+        },
+        "category_coverage_passed": {
+          "title": "Category Coverage Passed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Issues",
+          "type": "array"
+        }
+      },
+      "required": [
+        "hard_constraints_passed",
+        "group_coverage_passed",
+        "quantity_passed",
+        "budget_passed",
+        "delivery_passed",
+        "minimum_order_passed",
+        "category_coverage_passed",
+        "issues"
+      ],
+      "title": "PlanValidationV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "combination_set",
+      "default": "combination_set",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "eligible_menu_set_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Eligible Menu Set Id",
+      "type": "string"
+    },
+    "serving_requirement_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Serving Requirement Id",
+      "type": "string"
+    },
+    "combinations": {
+      "items": {
+        "$ref": "#/$defs/OrderCombinationV1"
+      },
+      "maxItems": 10000,
+      "title": "Combinations",
+      "type": "array"
+    },
+    "evaluated_count": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Evaluated Count",
+      "type": "integer"
+    },
+    "truncated": {
+      "title": "Truncated",
+      "type": "boolean"
+    },
+    "rejection_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Rejection Reasons",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "profile_revision",
+    "eligible_menu_set_id",
+    "serving_requirement_id",
+    "combinations",
+    "evaluated_count",
+    "truncated",
+    "rejection_reasons"
+  ],
+  "title": "CombinationSetV1",
+  "type": "object"
+}

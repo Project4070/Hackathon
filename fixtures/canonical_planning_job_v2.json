@@ -1,0 +1,211 @@
+{
+  "schema_name": "planning_job",
+  "schema_version": "2.0",
+  "vocabulary_version": "1.0",
+  "intake": {
+    "schema_name": "planning_intake",
+    "schema_version": "2.0",
+    "vocabulary_version": "1.0",
+    "status": "ready_for_planning",
+    "request_id": "request-canonical-15",
+    "case_id": "case-canonical-15",
+    "profile_revision": 1,
+    "validated_at": "2026-08-02T00:10:00+09:00",
+    "profile": {
+      "locale": "ko",
+      "occasion": {
+        "meal_type": "dinner",
+        "service_style": "full_meal",
+        "activity_context": "club_meal",
+        "food_role": "primary_meal",
+        "leftover_storage": "unknown",
+        "scheduled_at": null,
+        "duration_minutes": null
+      },
+      "party": {
+        "total_count": 15,
+        "groups": [
+          {
+            "group_id": "group_large",
+            "display_label": "Large appetite",
+            "count": 4,
+            "attendance_status": "confirmed",
+            "appetite": {"band": "large", "stated_servings_milli": null},
+            "activity_level": "unknown",
+            "recent_meal_status": "unknown"
+          },
+          {
+            "group_id": "group_normal",
+            "display_label": "Normal appetite",
+            "count": 6,
+            "attendance_status": "confirmed",
+            "appetite": {"band": "normal", "stated_servings_milli": null},
+            "activity_level": "unknown",
+            "recent_meal_status": "unknown"
+          },
+          {
+            "group_id": "group_light",
+            "display_label": "Light appetite",
+            "count": 3,
+            "attendance_status": "confirmed",
+            "appetite": {"band": "light", "stated_servings_milli": null},
+            "activity_level": "unknown",
+            "recent_meal_status": "unknown"
+          },
+          {
+            "group_id": "group_vegetarian",
+            "display_label": "Vegetarian diner",
+            "count": 1,
+            "attendance_status": "confirmed",
+            "appetite": {"band": "normal", "stated_servings_milli": null},
+            "activity_level": "unknown",
+            "recent_meal_status": "unknown"
+          },
+          {
+            "group_id": "group_peanut_allergy",
+            "display_label": "Peanut allergy diner",
+            "count": 1,
+            "attendance_status": "confirmed",
+            "appetite": {"band": "normal", "stated_servings_milli": null},
+            "activity_level": "unknown",
+            "recent_meal_status": "unknown"
+          }
+        ]
+      },
+      "location_requirement": {
+        "delivery_required": true,
+        "source": "user_text",
+        "query": "연세대학교 정문",
+        "latitude": null,
+        "longitude": null
+      },
+      "food_scope": {
+        "requested_categories": [
+          {"namespace": "food_category", "code": "chicken", "label": "치킨"},
+          {"namespace": "food_category", "code": "pizza", "label": "피자"}
+        ],
+        "category_selection": "include_all",
+        "excluded_categories": [],
+        "restaurant_mixing": "single_restaurant_preferred"
+      },
+      "hard_requirements": [
+        {
+          "requirement_id": "requirement_vegetarian",
+          "kind": "diet",
+          "affected_group_ids": ["group_vegetarian"],
+          "terms": [{"namespace": "diet", "code": "vegetarian", "label": "채식"}],
+          "source_text": "채식주의자 1명"
+        },
+        {
+          "requirement_id": "requirement_peanut",
+          "kind": "allergy",
+          "affected_group_ids": ["group_peanut_allergy"],
+          "terms": [{"namespace": "allergen", "code": "peanut", "label": "땅콩"}],
+          "source_text": "땅콩 알레르기가 있는 1명"
+        }
+      ],
+      "preferences": [
+        {
+          "preference_id": "preference_spicy",
+          "target_kind": "spice",
+          "polarity": "avoid",
+          "strength": "strong",
+          "affected_group_ids": [],
+          "terms": [{"namespace": "spice", "code": "hot", "label": "매운 음식"}],
+          "source_text": "매운 음식은 피하고"
+        }
+      ],
+      "budget": {
+        "budget_type": "approximate_target",
+        "currency": "KRW",
+        "target_amount_minor": 250000,
+        "maximum_amount_minor": 275000,
+        "maximum_source": "policy_tolerance",
+        "cost_scope": {
+          "include_menu_price": true,
+          "include_delivery_fee": true,
+          "include_service_fee": true,
+          "include_discount": false
+        }
+      },
+      "quantity_preference": {
+        "primary_objective": "balanced",
+        "shortage_tolerance": "normal",
+        "leftover_tolerance": "normal"
+      },
+      "restaurant_preferences": {"preferred_names": [], "excluded_names": []},
+      "restriction_disclosure": {"status": "reported"},
+      "context_notes": [],
+      "evidence": []
+    },
+    "validation_receipt": {
+      "validator_version": "planning_intake_validator_v2.0.0",
+      "blocking_issues": [],
+      "warnings": [],
+      "assumptions": [],
+      "checked_invariants": [
+        "group_counts_sum_to_total",
+        "supported_food_categories",
+        "hard_requirements_reference_known_groups",
+        "budget_is_finite_and_nonnegative",
+        "location_requirement_usable",
+        "restaurant_mixing_resolved"
+      ]
+    }
+  },
+  "runtime_policy": {
+    "serving_policy": {
+      "serving_policy_id": "serving-policy-kr-v1",
+      "quantity_policy_id": "quantity-policy-v1"
+    },
+    "budget_policy": {
+      "policy_id": "budget-policy-v1",
+      "approximate_tolerance_basis_points": 1000
+    },
+    "restaurant_search": {
+      "policy_id": "restaurant-search-v1",
+      "restaurant_limit": 10,
+      "delivery_required": true,
+      "allow_bounded_refresh": true,
+      "maximum_cache_age_seconds": 86400
+    },
+    "menu_filter": {
+      "policy_id": "menu-filter-v1",
+      "evaluation_mode": "individual_menu",
+      "unknown_ingredient_policy": "keep_with_penalty",
+      "hard_constraint_unknown_policy": "exclude",
+      "eligibility_output_schema": "eligible-menu-set-v1"
+    },
+    "combination": {
+      "policy_id": "combination-policy-v1",
+      "allow_duplicate_menu_items": true,
+      "maximum_distinct_items": 4,
+      "maximum_total_quantity": 20
+    },
+    "ranking": {
+      "policy_id": "ranking-policy-v1",
+      "objectives": [
+        {"metric": "constraint_satisfaction", "weight_basis_points": 4000},
+        {"metric": "serving_fit", "weight_basis_points": 2500},
+        {"metric": "menu_diversity", "weight_basis_points": 2000},
+        {"metric": "budget_efficiency", "weight_basis_points": 1500}
+      ],
+      "diversity": {
+        "category_balance": true,
+        "avoid_single_item_dominance": true,
+        "duplicate_penalty_basis_points": 500
+      }
+    }
+  },
+  "execution_context": {
+    "requested_at": "2026-08-02T00:15:00+09:00",
+    "resolved_location": {
+      "source": "user_text",
+      "query": "연세대학교 정문",
+      "latitude": null,
+      "longitude": null
+    },
+    "restaurant_snapshot_id": "snapshot-sinchon-reviewed-v1",
+    "trace_id": "trace-canonical-15"
+  }
+}

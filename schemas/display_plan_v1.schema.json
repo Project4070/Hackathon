@@ -1,0 +1,1022 @@
+{
+  "$defs": {
+    "AlternativePlanV1": {
+      "additionalProperties": false,
+      "properties": {
+        "plan": {
+          "$ref": "#/$defs/ScoredCombinationV1"
+        },
+        "restaurant": {
+          "$ref": "#/$defs/RestaurantV1"
+        }
+      },
+      "required": [
+        "plan",
+        "restaurant"
+      ],
+      "title": "AlternativePlanV1",
+      "type": "object"
+    },
+    "AvailabilityStatus": {
+      "enum": [
+        "available",
+        "unavailable",
+        "unknown"
+      ],
+      "title": "AvailabilityStatus",
+      "type": "string"
+    },
+    "CombinationLineV1": {
+      "additionalProperties": false,
+      "properties": {
+        "menu_item_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Menu Item Id",
+          "type": "string"
+        },
+        "quantity": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Quantity",
+          "type": "integer"
+        },
+        "unit_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Unit Servings Milli",
+          "type": "integer"
+        },
+        "line_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Line Servings Milli",
+          "type": "integer"
+        },
+        "unit_price_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Unit Price Minor",
+          "type": "integer"
+        },
+        "line_price_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Line Price Minor",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "menu_item_id",
+        "quantity",
+        "unit_servings_milli",
+        "line_servings_milli",
+        "unit_price_minor",
+        "line_price_minor"
+      ],
+      "title": "CombinationLineV1",
+      "type": "object"
+    },
+    "CompletenessStatus": {
+      "enum": [
+        "complete",
+        "partial"
+      ],
+      "title": "CompletenessStatus",
+      "type": "string"
+    },
+    "ConfidenceLabel": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "DataMode": {
+      "enum": [
+        "crawler_live",
+        "crawler_cache",
+        "stale_cache",
+        "simulated_reviewed_fixture"
+      ],
+      "title": "DataMode",
+      "type": "string"
+    },
+    "ExpectedOutcomeV1": {
+      "additionalProperties": false,
+      "properties": {
+        "shortage_risk": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Shortage Risk",
+          "type": "string"
+        },
+        "leftover_risk": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Leftover Risk",
+          "type": "string"
+        },
+        "expected_leftover_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Expected Leftover Servings Milli",
+          "type": "integer"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "uncertainties": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Uncertainties",
+          "type": "array"
+        }
+      },
+      "required": [
+        "shortage_risk",
+        "leftover_risk",
+        "expected_leftover_servings_milli",
+        "confidence",
+        "uncertainties"
+      ],
+      "title": "ExpectedOutcomeV1",
+      "type": "object"
+    },
+    "FreshnessStatus": {
+      "enum": [
+        "fresh",
+        "stale"
+      ],
+      "title": "FreshnessStatus",
+      "type": "string"
+    },
+    "GroupAnalysisV1": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_attendance": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Actual Attendance",
+          "type": "integer"
+        },
+        "equivalent_group_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Equivalent Group Servings Milli",
+          "type": "integer"
+        },
+        "protected_demand_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Protected Demand Milli",
+          "type": "integer"
+        },
+        "applied_safety_margin_basis_points": {
+          "maximum": 1500,
+          "minimum": 0,
+          "title": "Applied Safety Margin Basis Points",
+          "type": "integer"
+        },
+        "target_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Target Servings Milli",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "actual_attendance",
+        "equivalent_group_servings_milli",
+        "protected_demand_milli",
+        "applied_safety_margin_basis_points",
+        "target_servings_milli"
+      ],
+      "title": "GroupAnalysisV1",
+      "type": "object"
+    },
+    "MenuItemV1": {
+      "additionalProperties": false,
+      "properties": {
+        "menu_item_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Menu Item Id",
+          "type": "string"
+        },
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "original_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Original Text",
+          "type": "string"
+        },
+        "category_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Category Code",
+          "type": "string"
+        },
+        "price_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Price Minor",
+          "type": "integer"
+        },
+        "currency": {
+          "const": "KRW",
+          "default": "KRW",
+          "title": "Currency",
+          "type": "string"
+        },
+        "sale_unit": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Sale Unit",
+          "type": "string"
+        },
+        "piece_count": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Piece Count"
+        },
+        "pizza_diameter_cm_milli": {
+          "anyOf": [
+            {
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pizza Diameter Cm Milli"
+        },
+        "slice_count": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Slice Count"
+        },
+        "vegetarian_status": {
+          "$ref": "#/$defs/VegetarianStatus"
+        },
+        "verified_free_allergens": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Verified Free Allergens",
+          "type": "array"
+        },
+        "allergen_tags": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Allergen Tags",
+          "type": "array"
+        },
+        "spice_level": {
+          "$ref": "#/$defs/SpiceLevel"
+        },
+        "availability": {
+          "$ref": "#/$defs/AvailabilityStatus"
+        },
+        "serving_evidence": {
+          "$ref": "#/$defs/ServingEvidenceV1"
+        },
+        "semantic_provenance": {
+          "$ref": "#/$defs/SemanticProvenanceV1"
+        },
+        "inferred_tags": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Inferred Tags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "menu_item_id",
+        "restaurant_id",
+        "name",
+        "original_text",
+        "category_code",
+        "price_minor",
+        "sale_unit",
+        "piece_count",
+        "pizza_diameter_cm_milli",
+        "slice_count",
+        "vegetarian_status",
+        "verified_free_allergens",
+        "allergen_tags",
+        "spice_level",
+        "availability",
+        "serving_evidence",
+        "semantic_provenance",
+        "inferred_tags"
+      ],
+      "title": "MenuItemV1",
+      "type": "object"
+    },
+    "MetricScoreV1": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Metric",
+          "type": "string"
+        },
+        "score_basis_points": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Score Basis Points",
+          "type": "integer"
+        },
+        "weighted_score": {
+          "maximum": 100000000,
+          "minimum": 0,
+          "title": "Weighted Score",
+          "type": "integer"
+        },
+        "reason": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric",
+        "score_basis_points",
+        "weighted_score",
+        "reason"
+      ],
+      "title": "MetricScoreV1",
+      "type": "object"
+    },
+    "OrderCombinationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "combination_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Combination Id",
+          "type": "string"
+        },
+        "strategy": {
+          "$ref": "#/$defs/PlanStrategy"
+        },
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/CombinationLineV1"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Lines",
+          "type": "array"
+        },
+        "target_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Target Servings Milli",
+          "type": "integer"
+        },
+        "total_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Total Servings Milli",
+          "type": "integer"
+        },
+        "surplus_servings_milli": {
+          "maximum": 10000000,
+          "minimum": -10000000,
+          "title": "Surplus Servings Milli",
+          "type": "integer"
+        },
+        "item_subtotal_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Item Subtotal Minor",
+          "type": "integer"
+        },
+        "fees_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Fees Minor",
+          "type": "integer"
+        },
+        "total_cost_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Total Cost Minor",
+          "type": "integer"
+        },
+        "budget_evaluated_cost_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Budget Evaluated Cost Minor",
+          "type": "integer"
+        },
+        "validation": {
+          "$ref": "#/$defs/PlanValidationV1"
+        }
+      },
+      "required": [
+        "combination_id",
+        "strategy",
+        "restaurant_id",
+        "lines",
+        "target_servings_milli",
+        "total_servings_milli",
+        "surplus_servings_milli",
+        "item_subtotal_minor",
+        "fees_minor",
+        "total_cost_minor",
+        "budget_evaluated_cost_minor",
+        "validation"
+      ],
+      "title": "OrderCombinationV1",
+      "type": "object"
+    },
+    "PlanStrategy": {
+      "enum": [
+        "leftover_minimizing",
+        "balanced",
+        "shortage_minimizing"
+      ],
+      "title": "PlanStrategy",
+      "type": "string"
+    },
+    "PlanValidationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "hard_constraints_passed": {
+          "title": "Hard Constraints Passed",
+          "type": "boolean"
+        },
+        "group_coverage_passed": {
+          "title": "Group Coverage Passed",
+          "type": "boolean"
+        },
+        "quantity_passed": {
+          "title": "Quantity Passed",
+          "type": "boolean"
+        },
+        "budget_passed": {
+          "title": "Budget Passed",
+          "type": "boolean"
+        },
+        "delivery_passed": {
+          "title": "Delivery Passed",
+          "type": "boolean"
+        },
+        "minimum_order_passed": {
+          "title": "Minimum Order Passed",
+          "type": "boolean"
+        },
+        "category_coverage_passed": {
+          "title": "Category Coverage Passed",
+          "type": "boolean"
+        },
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Issues",
+          "type": "array"
+        }
+      },
+      "required": [
+        "hard_constraints_passed",
+        "group_coverage_passed",
+        "quantity_passed",
+        "budget_passed",
+        "delivery_passed",
+        "minimum_order_passed",
+        "category_coverage_passed",
+        "issues"
+      ],
+      "title": "PlanValidationV1",
+      "type": "object"
+    },
+    "RestaurantV1": {
+      "additionalProperties": false,
+      "properties": {
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "source_restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Source Restaurant Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "branch": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Branch",
+          "type": "string"
+        },
+        "address": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Address",
+          "type": "string"
+        },
+        "latitude": {
+          "anyOf": [
+            {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latitude"
+        },
+        "longitude": {
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Longitude"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "delivery_queries": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Delivery Queries",
+          "type": "array"
+        },
+        "minimum_order_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Minimum Order Minor",
+          "type": "integer"
+        },
+        "delivery_fee_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Delivery Fee Minor",
+          "type": "integer"
+        },
+        "service_fee_minor": {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "title": "Service Fee Minor",
+          "type": "integer"
+        },
+        "estimated_delivery_minutes": {
+          "maximum": 600,
+          "minimum": 1,
+          "title": "Estimated Delivery Minutes",
+          "type": "integer"
+        },
+        "availability": {
+          "$ref": "#/$defs/AvailabilityStatus"
+        },
+        "menu_items": {
+          "items": {
+            "$ref": "#/$defs/MenuItemV1"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Menu Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "restaurant_id",
+        "source_restaurant_id",
+        "name",
+        "branch",
+        "address",
+        "latitude",
+        "longitude",
+        "source_url",
+        "delivery_queries",
+        "minimum_order_minor",
+        "delivery_fee_minor",
+        "service_fee_minor",
+        "estimated_delivery_minutes",
+        "availability",
+        "menu_items"
+      ],
+      "title": "RestaurantV1",
+      "type": "object"
+    },
+    "ScoredCombinationV1": {
+      "additionalProperties": false,
+      "properties": {
+        "combination": {
+          "$ref": "#/$defs/OrderCombinationV1"
+        },
+        "total_score": {
+          "maximum": 100000000,
+          "minimum": 0,
+          "title": "Total Score",
+          "type": "integer"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/MetricScoreV1"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Metrics",
+          "type": "array"
+        },
+        "soft_preference_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Soft Preference Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "combination",
+        "total_score",
+        "metrics",
+        "soft_preference_reasons"
+      ],
+      "title": "ScoredCombinationV1",
+      "type": "object"
+    },
+    "SemanticFieldStatus": {
+      "enum": [
+        "explicit",
+        "normalized",
+        "inferred",
+        "ambiguous"
+      ],
+      "title": "SemanticFieldStatus",
+      "type": "string"
+    },
+    "SemanticProvenanceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SemanticFieldStatus"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Model"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt Version"
+        },
+        "source_content_hash": {
+          "maxLength": 128,
+          "minLength": 8,
+          "title": "Source Content Hash",
+          "type": "string"
+        },
+        "enriched_at": {
+          "format": "date-time",
+          "title": "Enriched At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_text",
+        "source_url",
+        "status",
+        "confidence",
+        "model",
+        "prompt_version",
+        "source_content_hash",
+        "enriched_at"
+      ],
+      "title": "SemanticProvenanceV1",
+      "type": "object"
+    },
+    "ServingEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "practical_servings_min_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Practical Servings Min Milli",
+          "type": "integer"
+        },
+        "practical_servings_max_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Practical Servings Max Milli",
+          "type": "integer"
+        },
+        "selected_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Selected Servings Milli",
+          "type": "integer"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "observation_count": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Observation Count",
+          "type": "integer"
+        },
+        "reviewed": {
+          "title": "Reviewed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_url",
+        "source_text",
+        "practical_servings_min_milli",
+        "practical_servings_max_milli",
+        "selected_servings_milli",
+        "confidence",
+        "observation_count",
+        "reviewed"
+      ],
+      "title": "ServingEvidenceV1",
+      "type": "object"
+    },
+    "SpiceLevel": {
+      "enum": [
+        "none",
+        "mild",
+        "medium",
+        "hot",
+        "unknown"
+      ],
+      "title": "SpiceLevel",
+      "type": "string"
+    },
+    "VegetarianStatus": {
+      "enum": [
+        "explicit_yes",
+        "explicit_no",
+        "inferred",
+        "unknown"
+      ],
+      "title": "VegetarianStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "display_plan",
+      "default": "display_plan",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "status": {
+      "const": "plan_ready",
+      "default": "plan_ready",
+      "title": "Status",
+      "type": "string"
+    },
+    "group_analysis": {
+      "$ref": "#/$defs/GroupAnalysisV1"
+    },
+    "recommended_plan": {
+      "$ref": "#/$defs/ScoredCombinationV1"
+    },
+    "alternatives": {
+      "items": {
+        "$ref": "#/$defs/AlternativePlanV1"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Alternatives",
+      "type": "array"
+    },
+    "restaurant": {
+      "$ref": "#/$defs/RestaurantV1"
+    },
+    "snapshot_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "snapshot_crawled_at": {
+      "format": "date-time",
+      "title": "Snapshot Crawled At",
+      "type": "string"
+    },
+    "snapshot_parser_version": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Snapshot Parser Version",
+      "type": "string"
+    },
+    "snapshot_completeness": {
+      "$ref": "#/$defs/CompletenessStatus"
+    },
+    "freshness": {
+      "$ref": "#/$defs/FreshnessStatus"
+    },
+    "data_mode": {
+      "$ref": "#/$defs/DataMode"
+    },
+    "expected_outcome": {
+      "$ref": "#/$defs/ExpectedOutcomeV1"
+    },
+    "calculation_basis": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Calculation Basis",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Assumptions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "profile_revision",
+    "group_analysis",
+    "recommended_plan",
+    "alternatives",
+    "restaurant",
+    "snapshot_id",
+    "snapshot_crawled_at",
+    "snapshot_parser_version",
+    "snapshot_completeness",
+    "freshness",
+    "data_mode",
+    "expected_outcome",
+    "calculation_basis",
+    "assumptions"
+  ],
+  "title": "DisplayPlanV1",
+  "type": "object"
+}

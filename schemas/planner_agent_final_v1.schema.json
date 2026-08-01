@@ -1,0 +1,75 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "display_artifact_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Display Artifact Id"
+    },
+    "failure_artifact_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Failure Artifact Id"
+    },
+    "summary": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "recommendation_explanation": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Recommendation Explanation",
+      "type": "string"
+    },
+    "tradeoff_explanation": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Tradeoff Explanation",
+      "type": "string"
+    },
+    "uncertainty_explanation": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Uncertainty Explanation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "case_id",
+    "display_artifact_id",
+    "failure_artifact_id",
+    "summary",
+    "recommendation_explanation",
+    "tradeoff_explanation",
+    "uncertainty_explanation"
+  ],
+  "title": "PlannerAgentFinalV1",
+  "type": "object"
+}

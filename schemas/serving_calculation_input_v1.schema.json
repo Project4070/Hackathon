@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "RiskPreference": {
+      "enum": [
+        "minimize_leftovers",
+        "balanced",
+        "minimize_shortage"
+      ],
+      "title": "RiskPreference",
+      "type": "string"
+    },
+    "ServingGroupInputV1": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Group Id",
+          "type": "string"
+        },
+        "count": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "appetite_code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Appetite Code",
+          "type": "string"
+        },
+        "appetite_factor_milli": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Appetite Factor Milli",
+          "type": "integer"
+        },
+        "meal_context_code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Meal Context Code",
+          "type": "string"
+        },
+        "meal_context_factor_milli": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Meal Context Factor Milli",
+          "type": "integer"
+        },
+        "adjustment_codes": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Adjustment Codes",
+          "type": "array"
+        },
+        "protected": {
+          "title": "Protected",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "group_id",
+        "count",
+        "appetite_code",
+        "appetite_factor_milli",
+        "meal_context_code",
+        "meal_context_factor_milli",
+        "adjustment_codes",
+        "protected"
+      ],
+      "title": "ServingGroupInputV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "serving_calculation_input",
+      "default": "serving_calculation_input",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "serving_policy_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Serving Policy Id",
+      "type": "string"
+    },
+    "quantity_policy_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Quantity Policy Id",
+      "type": "string"
+    },
+    "groups": {
+      "items": {
+        "$ref": "#/$defs/ServingGroupInputV1"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Groups",
+      "type": "array"
+    },
+    "strategy": {
+      "$ref": "#/$defs/RiskPreference"
+    },
+    "feedback_demand_multiplier_basis_points": {
+      "maximum": 12500,
+      "minimum": 7500,
+      "title": "Feedback Demand Multiplier Basis Points",
+      "type": "integer"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "profile_revision",
+    "serving_policy_id",
+    "quantity_policy_id",
+    "groups",
+    "strategy",
+    "feedback_demand_multiplier_basis_points",
+    "warnings"
+  ],
+  "title": "ServingCalculationInputV1",
+  "type": "object"
+}

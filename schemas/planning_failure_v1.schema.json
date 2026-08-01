@@ -1,0 +1,83 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "planning_failure",
+      "default": "planning_failure",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "no_valid_plan",
+        "data_unavailable",
+        "unsupported",
+        "profile_contract_error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "problematic_field": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Problematic Field",
+      "type": "string"
+    },
+    "received_value": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Received Value",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    },
+    "corrective_action": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Corrective Action",
+      "type": "string"
+    },
+    "compromises": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Compromises",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "profile_revision",
+    "status",
+    "problematic_field",
+    "received_value",
+    "reason",
+    "corrective_action",
+    "compromises"
+  ],
+  "title": "PlanningFailureV1",
+  "type": "object"
+}

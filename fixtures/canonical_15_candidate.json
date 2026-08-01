@@ -1,0 +1,188 @@
+{
+  "locale": "ko",
+  "occasion": {
+    "meal_type": "dinner",
+    "service_style": "full_meal",
+    "activity_context": "club_meal",
+    "food_role": "primary_meal",
+    "leftover_storage": "unknown",
+    "scheduled_at": null,
+    "duration_minutes": null
+  },
+  "party": {
+    "total_count": 15,
+    "groups": [
+      {
+        "group_id": "group_large",
+        "display_label": "많이 먹는 사람",
+        "count": 4,
+        "attendance_status": "confirmed",
+        "appetite": {"band": "large", "stated_servings_milli": null},
+        "activity_level": "unknown",
+        "recent_meal_status": "unknown"
+      },
+      {
+        "group_id": "group_normal",
+        "display_label": "보통 먹는 사람",
+        "count": 6,
+        "attendance_status": "confirmed",
+        "appetite": {"band": "normal", "stated_servings_milli": null},
+        "activity_level": "unknown",
+        "recent_meal_status": "unknown"
+      },
+      {
+        "group_id": "group_light",
+        "display_label": "적게 먹는 사람",
+        "count": 3,
+        "attendance_status": "confirmed",
+        "appetite": {"band": "light", "stated_servings_milli": null},
+        "activity_level": "unknown",
+        "recent_meal_status": "unknown"
+      },
+      {
+        "group_id": "group_vegetarian",
+        "display_label": "채식주의자",
+        "count": 1,
+        "attendance_status": "confirmed",
+        "appetite": {"band": "normal", "stated_servings_milli": null},
+        "activity_level": "unknown",
+        "recent_meal_status": "unknown"
+      },
+      {
+        "group_id": "group_peanut_allergy",
+        "display_label": "땅콩 알레르기 참가자",
+        "count": 1,
+        "attendance_status": "confirmed",
+        "appetite": {"band": "normal", "stated_servings_milli": null},
+        "activity_level": "unknown",
+        "recent_meal_status": "unknown"
+      }
+    ]
+  },
+  "location_hint": {
+    "source": "user_text",
+    "query": "연세대학교",
+    "latitude": null,
+    "longitude": null
+  },
+  "food_scope": {
+    "requested_categories": [
+      {"namespace": "food_category", "code": "chicken", "label": "치킨"},
+      {"namespace": "food_category", "code": "pizza", "label": "피자"}
+    ],
+    "category_selection": "include_all",
+    "excluded_categories": [],
+    "restaurant_mixing": "unspecified"
+  },
+  "hard_requirements": [
+    {
+      "requirement_id": "requirement_vegetarian",
+      "kind": "diet",
+      "affected_group_ids": ["group_vegetarian"],
+      "terms": [{"namespace": "diet", "code": "vegetarian", "label": "채식주의"}],
+      "source_text": "채식주의자 1명"
+    },
+    {
+      "requirement_id": "requirement_peanut",
+      "kind": "allergy",
+      "affected_group_ids": ["group_peanut_allergy"],
+      "terms": [{"namespace": "allergen", "code": "peanut", "label": "땅콩"}],
+      "source_text": "땅콩 알레르기가 있는 1명"
+    }
+  ],
+  "preferences": [
+    {
+      "preference_id": "preference_spicy",
+      "target_kind": "spice",
+      "polarity": "avoid",
+      "strength": "strong",
+      "affected_group_ids": [],
+      "terms": [{"namespace": "spice", "code": "hot", "label": "매운 음식"}],
+      "source_text": "매운 음식은 피하고"
+    }
+  ],
+  "budget_intent": {
+    "budget_type": "approximate_target",
+    "currency": "KRW",
+    "target_amount_minor": 250000,
+    "explicit_maximum_amount_minor": null,
+    "cost_scope": {
+      "include_menu_price": null,
+      "include_delivery_fee": null,
+      "include_service_fee": null,
+      "include_discount": null
+    },
+    "source_text": "예산은 약 25만원"
+  },
+  "quantity_preference": {
+    "primary_objective": "balanced",
+    "shortage_tolerance": "normal",
+    "leftover_tolerance": "normal"
+  },
+  "restaurant_preferences": {"preferred_names": [], "excluded_names": []},
+  "restriction_disclosure": {"status": "reported"},
+  "context_notes": [],
+  "evidence": [
+    {
+      "evidence_id": "evidence_total",
+      "field_path": "/party/total_count",
+      "source_text": "동아리원 15명",
+      "status": "explicit",
+      "confidence": 1.0,
+      "start_offset": null,
+      "end_offset": null,
+      "note": null
+    },
+    {
+      "evidence_id": "evidence_groups",
+      "field_path": "/party/groups",
+      "source_text": "많이 먹는 4명, 보통 6명, 적게 먹는 3명, 채식주의자 1명, 땅콩 알레르기가 있는 1명",
+      "status": "explicit",
+      "confidence": 1.0,
+      "start_offset": null,
+      "end_offset": null,
+      "note": null
+    },
+    {
+      "evidence_id": "evidence_location",
+      "field_path": "/location_hint/query",
+      "source_text": "연세대학교",
+      "status": "explicit",
+      "confidence": 1.0,
+      "start_offset": null,
+      "end_offset": null,
+      "note": null
+    },
+    {
+      "evidence_id": "evidence_categories",
+      "field_path": "/food_scope/requested_categories",
+      "source_text": "치킨과 피자를 모두",
+      "status": "explicit",
+      "confidence": 1.0,
+      "start_offset": null,
+      "end_offset": null,
+      "note": null
+    },
+    {
+      "evidence_id": "evidence_requirements",
+      "field_path": "/hard_requirements",
+      "source_text": "채식주의자 1명, 땅콩 알레르기가 있는 1명",
+      "status": "explicit",
+      "confidence": 1.0,
+      "start_offset": null,
+      "end_offset": null,
+      "note": null
+    },
+    {
+      "evidence_id": "evidence_budget",
+      "field_path": "/budget_intent/target_amount_minor",
+      "source_text": "예산은 약 25만원",
+      "status": "explicit",
+      "confidence": 1.0,
+      "start_offset": null,
+      "end_offset": null,
+      "note": null
+    }
+  ],
+  "unresolved_issues": []
+}

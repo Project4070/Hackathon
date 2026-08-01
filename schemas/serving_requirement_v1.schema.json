@@ -1,0 +1,187 @@
+{
+  "$defs": {
+    "GroupDemandV1": {
+      "additionalProperties": false,
+      "properties": {
+        "group_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Group Id",
+          "type": "string"
+        },
+        "participant_count": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Participant Count",
+          "type": "integer"
+        },
+        "per_person_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Per Person Servings Milli",
+          "type": "integer"
+        },
+        "total_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Total Servings Milli",
+          "type": "integer"
+        },
+        "protected": {
+          "title": "Protected",
+          "type": "boolean"
+        },
+        "applied_factor_codes": {
+          "items": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "maxItems": 12,
+          "minItems": 2,
+          "title": "Applied Factor Codes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "group_id",
+        "participant_count",
+        "per_person_servings_milli",
+        "total_servings_milli",
+        "protected",
+        "applied_factor_codes"
+      ],
+      "title": "GroupDemandV1",
+      "type": "object"
+    },
+    "PlanStrategy": {
+      "enum": [
+        "leftover_minimizing",
+        "balanced",
+        "shortage_minimizing"
+      ],
+      "title": "PlanStrategy",
+      "type": "string"
+    },
+    "StrategyTargetV1": {
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "$ref": "#/$defs/PlanStrategy"
+        },
+        "safety_margin_basis_points": {
+          "maximum": 1500,
+          "minimum": 0,
+          "title": "Safety Margin Basis Points",
+          "type": "integer"
+        },
+        "target_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Target Servings Milli",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "strategy",
+        "safety_margin_basis_points",
+        "target_servings_milli"
+      ],
+      "title": "StrategyTargetV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_name": {
+      "const": "serving_requirement",
+      "default": "serving_requirement",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "attendance_count": {
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Attendance Count",
+      "type": "integer"
+    },
+    "equivalent_group_servings_milli": {
+      "maximum": 10000000,
+      "minimum": 0,
+      "title": "Equivalent Group Servings Milli",
+      "type": "integer"
+    },
+    "protected_demand_milli": {
+      "maximum": 10000000,
+      "minimum": 0,
+      "title": "Protected Demand Milli",
+      "type": "integer"
+    },
+    "group_demands": {
+      "items": {
+        "$ref": "#/$defs/GroupDemandV1"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Group Demands",
+      "type": "array"
+    },
+    "strategy_targets": {
+      "items": {
+        "$ref": "#/$defs/StrategyTargetV1"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Strategy Targets",
+      "type": "array"
+    },
+    "serving_policy_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Serving Policy Id",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "profile_revision",
+    "attendance_count",
+    "equivalent_group_servings_milli",
+    "protected_demand_milli",
+    "group_demands",
+    "strategy_targets",
+    "serving_policy_id",
+    "warnings"
+  ],
+  "title": "ServingRequirementV1",
+  "type": "object"
+}

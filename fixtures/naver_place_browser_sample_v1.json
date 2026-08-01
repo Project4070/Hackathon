@@ -1,0 +1,104 @@
+{
+  "schema_name": "naver_place_browser_sample",
+  "schema_version": "1.0",
+  "observed_at": "2026-08-02T00:00:00+09:00",
+  "source_url": "https://pcmap.place.naver.com/restaurant/list?query=%EB%B0%B0%EB%8B%AC&x=127.025869&y=37.502104&clientX=127.025869&clientY=37.502104&display=70&locale=ko",
+  "data_mode": "browser_observed_fixture",
+  "warning": "공개 브라우저 화면에서 확인한 데모 스냅샷이다. 실시간 가격·재고·배달 가능 지역을 보장하지 않는다.",
+  "restaurants": [
+    {
+      "id": "37021055",
+      "name": "춘천한옥집",
+      "category": "한식",
+      "x": 127.0275956,
+      "y": 37.5029673,
+      "roadAddress": "강남대로102길 29 지하1층",
+      "address": "역삼동 617-3",
+      "virtualPhone": "0507-1400-5324",
+      "phone": null,
+      "totalReviewCount": 1681,
+      "naverOrder": {
+        "isDelivery": false,
+        "isPickup": false
+      },
+      "quantityReview": {
+        "sourceReviewCount": 5471,
+        "totalVoteCount": 15064,
+        "keywordReviewCount": 4494,
+        "participantCount": 4418,
+        "keyword": "양이 많아요",
+        "keywordCode": "large",
+        "selectedCount": 1589,
+        "rank": 3,
+        "previousRank": null
+      },
+      "menus": [
+        {
+          "id": "37021055_0",
+          "name": "닭갈비",
+          "price": 13000,
+          "priceText": "13000",
+          "description": "강남역 맛집 춘천한옥집 닭갈비",
+          "recommended": false,
+          "images": [
+            "https://ldb-phinf.pstatic.net/20240719_243/1721376394488kYkrP_JPEG/IMG_7132.jpg"
+          ]
+        },
+        {
+          "id": "37021055_1",
+          "name": "치즈닭갈비",
+          "price": 15000,
+          "priceText": "15000",
+          "description": "강남역 맛집 대표메뉴 치즈닭갈비",
+          "recommended": true,
+          "images": [
+            "https://ldb-phinf.pstatic.net/20240719_186/172137642311592uB2_JPEG/IMG_7235.jpg"
+          ]
+        }
+      ],
+      "source_url": "https://pcmap.place.naver.com/restaurant/37021055/home?entry=pll&locale=ko"
+    },
+    {
+      "id": "1289315174",
+      "name": "보울박스 역삼역점",
+      "category": "다이어트,샐러드",
+      "x": 127.0324715,
+      "y": 37.497856,
+      "roadAddress": "논현로85길 70 1층 103호",
+      "address": "역삼동 823-16",
+      "virtualPhone": "0507-1476-1455",
+      "phone": null,
+      "totalReviewCount": 157,
+      "naverOrder": {
+        "isDelivery": false,
+        "isPickup": true
+      },
+      "quantityReview": null,
+      "menus": [
+        {
+          "id": "1289315174_0",
+          "name": "버섯 샐러드",
+          "price": 11900,
+          "priceText": "11900",
+          "description": "",
+          "recommended": false,
+          "images": [
+            "https://ldb-phinf.pstatic.net/20240327_91/1711505744999CArLq_JPEG/%EB%B2%84%EC%84%AF_%EB%88%84%EB%93%9C.jpg"
+          ]
+        },
+        {
+          "id": "1289315174_1",
+          "name": "두부샐러드",
+          "price": 9900,
+          "priceText": "9900",
+          "description": "",
+          "recommended": false,
+          "images": [
+            "https://ldb-phinf.pstatic.net/20240327_117/1711498472470rLN0a_JPEG/%EB%91%90%EB%B6%80%EC%83%90%EB%9F%AC%EB%93%9C.jpg"
+          ]
+        }
+      ],
+      "source_url": "https://pcmap.place.naver.com/restaurant/1289315174/home?entry=pll&locale=ko"
+    }
+  ]
+}

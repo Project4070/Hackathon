@@ -11,10 +11,15 @@
 
 - [English PRD](PRD.md)
 - [AGENTS.md](AGENTS.md) — 제품·엔지니어링 원칙
+- [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) — 새 구현 세션 시작 문서
+- [ARCHITECTURE_WORKFLOW.md](ARCHITECTURE_WORKFLOW.md) — 최신 데이터 흐름·툴 경계·Mermaid 다이어그램
+- [PLANNING_INTAKE_CONTRACT.md](PLANNING_INTAKE_CONTRACT.md) — 1–4단계와 5–10단계 사이의 계약
 - [한국어 업무 분담](WORK_ALLOCATION_KO.md)
 - [통합 영문·국문 업무 분담](WORK_ALLOCATION.md)
 - [공식 대회 규칙](https://yonsei-yai-hackathon.netlify.app/#rules)
 - [공식 평가 기준](https://yonsei-yai-hackathon.netlify.app/#judging)
+
+구현 시 `IMPLEMENTATION_HANDOFF.md`와 v2 계약이 과거 스크래치 문서보다 우선한다. 인터랙티브 아키텍처는 [공개 다이어그램](https://group-food-agent-workflow.thetired3080.chatgpt.site/)에서 확인하며, 편집 가능한 데이터 원본은 `workflow-site/public/data/workflow.json`이다.
 
 ## 1. 요약
 

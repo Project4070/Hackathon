@@ -1,0 +1,1028 @@
+{
+  "$defs": {
+    "AvailabilityStatus": {
+      "enum": [
+        "available",
+        "unavailable",
+        "unknown"
+      ],
+      "title": "AvailabilityStatus",
+      "type": "string"
+    },
+    "ConfidenceLabel": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "DeliveryCapabilityV1": {
+      "additionalProperties": false,
+      "properties": {
+        "confirmed": {
+          "title": "Confirmed",
+          "type": "boolean"
+        },
+        "provider": {
+          "const": "naver-order",
+          "default": "naver-order",
+          "title": "Provider",
+          "type": "string"
+        },
+        "pickup_available": {
+          "title": "Pickup Available",
+          "type": "boolean"
+        },
+        "target_address_status": {
+          "enum": [
+            "verified",
+            "unknown",
+            "not_requested"
+          ],
+          "title": "Target Address Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "confirmed",
+        "pickup_available",
+        "target_address_status"
+      ],
+      "title": "DeliveryCapabilityV1",
+      "type": "object"
+    },
+    "IssueSeverity": {
+      "enum": [
+        "error",
+        "warning"
+      ],
+      "title": "IssueSeverity",
+      "type": "string"
+    },
+    "PlannerDataIssueV1": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Field Path",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/IssueSeverity"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "corrective_action": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Corrective Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "field_path",
+        "severity",
+        "reason",
+        "corrective_action"
+      ],
+      "title": "PlannerDataIssueV1",
+      "type": "object"
+    },
+    "PlannerLocationJoinV1": {
+      "additionalProperties": false,
+      "description": "The candidate edge between one requested location and one place.",
+      "properties": {
+        "location_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Location Id",
+          "type": "string"
+        },
+        "candidate_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "request_latitude": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Request Latitude",
+          "type": "number"
+        },
+        "request_longitude": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Request Longitude",
+          "type": "number"
+        },
+        "place_latitude": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Place Latitude",
+          "type": "number"
+        },
+        "place_longitude": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Place Longitude",
+          "type": "number"
+        },
+        "distance_meters": {
+          "minimum": 0,
+          "title": "Distance Meters",
+          "type": "integer"
+        },
+        "radius_meters": {
+          "maximum": 100000,
+          "minimum": 1,
+          "title": "Radius Meters",
+          "type": "integer"
+        },
+        "within_radius": {
+          "title": "Within Radius",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "location_id",
+        "candidate_id",
+        "request_latitude",
+        "request_longitude",
+        "place_latitude",
+        "place_longitude",
+        "distance_meters",
+        "radius_meters",
+        "within_radius"
+      ],
+      "title": "PlannerLocationJoinV1",
+      "type": "object"
+    },
+    "PlannerMenuItemV1": {
+      "additionalProperties": false,
+      "properties": {
+        "menu_item_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Menu Item Id",
+          "type": "string"
+        },
+        "source_menu_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Source Menu Id",
+          "type": "string"
+        },
+        "restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Restaurant Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "original_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Original Text",
+          "type": "string"
+        },
+        "price_minor": {
+          "anyOf": [
+            {
+              "maximum": 10000000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Price Minor"
+        },
+        "price_text": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Price Text"
+        },
+        "sale_unit": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sale Unit"
+        },
+        "category_code": {
+          "default": "unknown",
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Category Code",
+          "type": "string"
+        },
+        "piece_count": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Piece Count"
+        },
+        "pizza_diameter_cm_milli": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pizza Diameter Cm Milli"
+        },
+        "slice_count": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Slice Count"
+        },
+        "vegetarian_status": {
+          "$ref": "#/$defs/VegetarianStatus",
+          "default": "unknown"
+        },
+        "verified_free_allergens": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Verified Free Allergens",
+          "type": "array"
+        },
+        "allergen_tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Allergen Tags",
+          "type": "array"
+        },
+        "spice_level": {
+          "$ref": "#/$defs/SpiceLevel",
+          "default": "unknown"
+        },
+        "availability": {
+          "$ref": "#/$defs/AvailabilityStatus",
+          "default": "unknown"
+        },
+        "serving_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ServingEvidenceV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "semantic_provenance": {
+          "$ref": "#/$defs/SemanticProvenanceV1"
+        },
+        "inferred_tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Inferred Tags",
+          "type": "array"
+        },
+        "issues": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PlannerDataIssueV1"
+          },
+          "maxItems": 32,
+          "title": "Issues",
+          "type": "array"
+        }
+      },
+      "required": [
+        "menu_item_id",
+        "source_menu_id",
+        "restaurant_id",
+        "name",
+        "original_text",
+        "semantic_provenance"
+      ],
+      "title": "PlannerMenuItemV1",
+      "type": "object"
+    },
+    "PlannerSourceProvenanceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_system": {
+          "const": "naver_place",
+          "default": "naver_place",
+          "title": "Source System",
+          "type": "string"
+        },
+        "source_restaurant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Source Restaurant Id",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "parser_version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Parser Version",
+          "type": "string"
+        },
+        "data_mode": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Data Mode",
+          "type": "string"
+        },
+        "completeness": {
+          "enum": [
+            "complete",
+            "partial"
+          ],
+          "title": "Completeness",
+          "type": "string"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_restaurant_id",
+        "source_url",
+        "observed_at",
+        "parser_version",
+        "data_mode",
+        "completeness"
+      ],
+      "title": "PlannerSourceProvenanceV1",
+      "type": "object"
+    },
+    "PlannerStatus": {
+      "enum": [
+        "ready",
+        "insufficient_data"
+      ],
+      "title": "PlannerStatus",
+      "type": "string"
+    },
+    "QuantityReviewEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "keyword": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Keyword",
+          "type": "string"
+        },
+        "keyword_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Keyword Code",
+          "type": "string"
+        },
+        "threshold": {
+          "default": 50,
+          "minimum": 0,
+          "title": "Threshold",
+          "type": "integer"
+        },
+        "eligible": {
+          "title": "Eligible",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "below_threshold"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "source_review_count": {
+          "minimum": 0,
+          "title": "Source Review Count",
+          "type": "integer"
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rank"
+        },
+        "previous_rank": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Previous Rank"
+        },
+        "selected_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Selected Count"
+        },
+        "participant_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Participant Count"
+        },
+        "response_rate_percent": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Rate Percent"
+        },
+        "total_vote_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Vote Count"
+        },
+        "keyword_review_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keyword Review Count"
+        }
+      },
+      "required": [
+        "keyword",
+        "keyword_code",
+        "eligible",
+        "status",
+        "source_review_count"
+      ],
+      "title": "QuantityReviewEvidenceV1",
+      "type": "object"
+    },
+    "SemanticFieldStatus": {
+      "enum": [
+        "explicit",
+        "normalized",
+        "inferred",
+        "ambiguous"
+      ],
+      "title": "SemanticFieldStatus",
+      "type": "string"
+    },
+    "SemanticProvenanceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SemanticFieldStatus"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Model"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prompt Version"
+        },
+        "source_content_hash": {
+          "maxLength": 128,
+          "minLength": 8,
+          "title": "Source Content Hash",
+          "type": "string"
+        },
+        "enriched_at": {
+          "format": "date-time",
+          "title": "Enriched At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_text",
+        "source_url",
+        "status",
+        "confidence",
+        "model",
+        "prompt_version",
+        "source_content_hash",
+        "enriched_at"
+      ],
+      "title": "SemanticProvenanceV1",
+      "type": "object"
+    },
+    "ServingEvidenceV1": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_url": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Url",
+          "type": "string"
+        },
+        "source_text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Source Text",
+          "type": "string"
+        },
+        "practical_servings_min_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Practical Servings Min Milli",
+          "type": "integer"
+        },
+        "practical_servings_max_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Practical Servings Max Milli",
+          "type": "integer"
+        },
+        "selected_servings_milli": {
+          "maximum": 10000000,
+          "minimum": 0,
+          "title": "Selected Servings Milli",
+          "type": "integer"
+        },
+        "confidence": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "observation_count": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Observation Count",
+          "type": "integer"
+        },
+        "reviewed": {
+          "title": "Reviewed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "source_url",
+        "source_text",
+        "practical_servings_min_milli",
+        "practical_servings_max_milli",
+        "selected_servings_milli",
+        "confidence",
+        "observation_count",
+        "reviewed"
+      ],
+      "title": "ServingEvidenceV1",
+      "type": "object"
+    },
+    "SpiceLevel": {
+      "enum": [
+        "none",
+        "mild",
+        "medium",
+        "hot",
+        "unknown"
+      ],
+      "title": "SpiceLevel",
+      "type": "string"
+    },
+    "VegetarianStatus": {
+      "enum": [
+        "explicit_yes",
+        "explicit_no",
+        "inferred",
+        "unknown"
+      ],
+      "title": "VegetarianStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The only Naver-derived object allowed to cross into the planner.",
+  "properties": {
+    "schema_name": {
+      "const": "planner_restaurant",
+      "default": "planner_restaurant",
+      "title": "Schema Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "restaurant_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Restaurant Id",
+      "type": "string"
+    },
+    "source_restaurant_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Source Restaurant Id",
+      "type": "string"
+    },
+    "source_system": {
+      "const": "naver_place",
+      "default": "naver_place",
+      "title": "Source System",
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "category": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Category",
+      "type": "string"
+    },
+    "branch": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Branch"
+    },
+    "address": {
+      "anyOf": [
+        {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Address"
+    },
+    "latitude": {
+      "anyOf": [
+        {
+          "maximum": 90,
+          "minimum": -90,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latitude"
+    },
+    "longitude": {
+      "anyOf": [
+        {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Longitude"
+    },
+    "source_url": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Source Url",
+      "type": "string"
+    },
+    "naver_map_url": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Naver Map Url",
+      "type": "string"
+    },
+    "distance_meters": {
+      "minimum": 0,
+      "title": "Distance Meters",
+      "type": "integer"
+    },
+    "location_join": {
+      "$ref": "#/$defs/PlannerLocationJoinV1"
+    },
+    "review_count": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Review Count"
+    },
+    "quantity_review": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/QuantityReviewEvidenceV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "delivery": {
+      "$ref": "#/$defs/DeliveryCapabilityV1"
+    },
+    "delivery_queries": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Delivery Queries",
+      "type": "array"
+    },
+    "minimum_order_minor": {
+      "anyOf": [
+        {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Minimum Order Minor"
+    },
+    "delivery_fee_minor": {
+      "anyOf": [
+        {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Delivery Fee Minor"
+    },
+    "service_fee_minor": {
+      "anyOf": [
+        {
+          "maximum": 10000000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Service Fee Minor"
+    },
+    "estimated_delivery_minutes": {
+      "anyOf": [
+        {
+          "maximum": 600,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Estimated Delivery Minutes"
+    },
+    "availability": {
+      "$ref": "#/$defs/AvailabilityStatus",
+      "default": "unknown"
+    },
+    "menu_items": {
+      "items": {
+        "$ref": "#/$defs/PlannerMenuItemV1"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Menu Items",
+      "type": "array"
+    },
+    "planning_status": {
+      "$ref": "#/$defs/PlannerStatus"
+    },
+    "issues": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/PlannerDataIssueV1"
+      },
+      "maxItems": 64,
+      "title": "Issues",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/PlannerSourceProvenanceV1"
+    }
+  },
+  "required": [
+    "restaurant_id",
+    "source_restaurant_id",
+    "name",
+    "category",
+    "source_url",
+    "naver_map_url",
+    "distance_meters",
+    "location_join",
+    "delivery",
+    "menu_items",
+    "planning_status",
+    "provenance"
+  ],
+  "title": "PlannerRestaurantV1",
+  "type": "object"
+}

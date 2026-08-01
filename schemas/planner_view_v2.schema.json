@@ -1,0 +1,115 @@
+{
+  "additionalProperties": false,
+  "description": "Small, non-prose view supplied to the main orchestration agent.",
+  "properties": {
+    "case_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "profile_revision": {
+      "minimum": 1,
+      "title": "Profile Revision",
+      "type": "integer"
+    },
+    "participant_count": {
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Participant Count",
+      "type": "integer"
+    },
+    "location_query": {
+      "anyOf": [
+        {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Location Query"
+    },
+    "requested_category_codes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Requested Category Codes",
+      "type": "array"
+    },
+    "hard_requirement_ids": {
+      "items": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Hard Requirement Ids",
+      "type": "array"
+    },
+    "risk_preference": {
+      "maxLength": 50,
+      "minLength": 1,
+      "title": "Risk Preference",
+      "type": "string"
+    },
+    "maximum_budget_minor": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Maximum Budget Minor"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Snapshot Id"
+    },
+    "policy_ids": {
+      "items": {
+        "maxLength": 100,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 6,
+      "title": "Policy Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "profile_revision",
+    "participant_count",
+    "location_query",
+    "requested_category_codes",
+    "hard_requirement_ids",
+    "risk_preference",
+    "maximum_budget_minor",
+    "snapshot_id",
+    "policy_ids"
+  ],
+  "title": "PlannerViewV2",
+  "type": "object"
+}

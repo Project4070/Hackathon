@@ -1,0 +1,292 @@
+"""G5 reviewed-snapshot lookup, semantic-cache validation, and hard eligibility."""
+
+from __future__ import annotations
+
+import html
+import json
+import re
+from datetime import datetime, timedelta
+from hashlib import sha256
+from pathlib import Path
+
+from .contracts import (
+    HardRequirementKind,
+    PlanningIntakeV2,
+    PreferencePolarity,
+    PreferenceStrength,
+    SemanticNamespace,
+)
+from .planner_models import (
+    AvailabilityStatus,
+    CandidateMenuSetV1,
+    DataMode,
+    EligibleMenuSetV1,
+    EligibleRestaurantV1,
+    FreshnessStatus,
+    MenuEligibilityV1,
+    MenuItemV1,
+    NormalizedMenuSetV1,
+    RestaurantSnapshotV1,
+    SpiceLevel,
+    VegetarianStatus,
+)
+
+SUPPORTED_PLANNER_CATEGORY_CODES = frozenset({"chicken", "pizza"})
+
+
+def default_snapshot_path() -> Path:
+    return Path(__file__).resolve().parents[2] / "fixtures" / "restaurant_snapshot_sinchon_v1.json"
+
+
+def load_restaurant_snapshot(path: Path | None = None) -> RestaurantSnapshotV1:
+    with (path or default_snapshot_path()).open("r", encoding="utf-8") as handle:
+        return RestaurantSnapshotV1.model_validate(json.load(handle))
+
+
+def sanitize_visible_text(value: str, *, maximum_length: int = 2_000) -> str:
+    """Bound and de-markup untrusted visible menu text before model enrichment."""
+
+    if len(value) > maximum_length:
+        raise ValueError(f"visible source text exceeds {maximum_length} characters")
+    without_blocks = re.sub(
+        r"(?is)<(script|style|noscript|template)[^>]*>.*?</\1>", " ", value
+    )
+    without_tags = re.sub(r"(?s)<[^>]+>", " ", without_blocks)
+    clean = html.unescape(without_tags)
+    clean = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", clean)
+    return re.sub(r"\s+", " ", clean).strip()
+
+
+def source_content_hash(value: str) -> str:
+    return sha256(value.encode("utf-8")).hexdigest()
+
+
+def _normalized_location(value: str) -> str:
+    return re.sub(r"[^0-9a-z가-힣]", "", value.casefold())
+
+
+def _delivery_is_verified(intake: PlanningIntakeV2, restaurant) -> bool:
+    location = intake.profile.location_requirement
+    if not location.delivery_required:
+        return True
+    if location.query is None:
+        # Coordinates without an explicit source-owned delivery radius cannot
+        # prove delivery coverage.
+        return False
+    query = _normalized_location(location.query)
+    return any(
+        query in _normalized_location(coverage)
+        or _normalized_location(coverage) in query
+        for coverage in restaurant.delivery_queries
+    )
+
+
+def search_menu_candidates(
+    intake: PlanningIntakeV2,
+    snapshot: RestaurantSnapshotV1,
+    *,
+    now: datetime,
+    maximum_cache_age_seconds: int,
+    restaurant_limit: int,
+    unavailable_restaurant_ids: set[str] | None = None,
+    unavailable_menu_item_ids: set[str] | None = None,
+) -> CandidateMenuSetV1:
+    """Query the cache first and return only source-backed requested categories."""
+
+    unavailable_restaurants = unavailable_restaurant_ids or set()
+    unavailable_items = unavailable_menu_item_ids or set()
+    age_seconds = max(0, int((now - snapshot.crawled_at).total_seconds()))
+    freshness = (
+        FreshnessStatus.FRESH
+        if age_seconds <= maximum_cache_age_seconds
+        else FreshnessStatus.STALE
+    )
+    requested_categories = {term.code for term in intake.profile.food_scope.requested_categories}
+    unsupported_categories = requested_categories - SUPPORTED_PLANNER_CATEGORY_CODES
+    if unsupported_categories:
+        raise LookupError(
+            "planner capability unavailable for requested food categories: "
+            + ", ".join(sorted(unsupported_categories))
+        )
+    excluded_restaurant_names = {
+        name.casefold() for name in intake.profile.restaurant_preferences.excluded_names
+    }
+    restaurants = []
+    for restaurant in snapshot.restaurants:
+        if restaurant.restaurant_id in unavailable_restaurants:
+            continue
+        if restaurant.name.casefold() in excluded_restaurant_names:
+            continue
+        if restaurant.availability is not AvailabilityStatus.AVAILABLE:
+            continue
+        if not _delivery_is_verified(intake, restaurant):
+            continue
+        scheduled_at = intake.profile.occasion.scheduled_at
+        if scheduled_at is not None and now + timedelta(
+            minutes=restaurant.estimated_delivery_minutes
+        ) > scheduled_at:
+            continue
+        items = [
+            item
+            for item in restaurant.menu_items
+            if item.menu_item_id not in unavailable_items
+            and item.availability is AvailabilityStatus.AVAILABLE
+            and item.category_code in requested_categories
+        ]
+        if items:
+            restaurants.append(restaurant.model_copy(update={"menu_items": items}))
+        if len(restaurants) >= restaurant_limit:
+            break
+    if not restaurants:
+        raise LookupError("no source-backed restaurant candidates are available")
+
+    warnings = list(snapshot.warnings)
+    if snapshot.completeness.value == "partial":
+        warnings.append("restaurant snapshot is partial; missing fields were not invented")
+    data_mode = snapshot.data_mode
+    if freshness is FreshnessStatus.STALE:
+        warnings.append(
+            f"last successful snapshot is stale ({age_seconds} seconds old); bounded refresh was unavailable"
+        )
+        if data_mode not in {DataMode.SIMULATED_REVIEWED_FIXTURE}:
+            data_mode = DataMode.STALE_CACHE
+    return CandidateMenuSetV1(
+        case_id=intake.case_id,
+        profile_revision=intake.profile_revision,
+        snapshot_id=snapshot.snapshot_id,
+        freshness=freshness,
+        completeness=snapshot.completeness,
+        data_mode=data_mode,
+        restaurants=restaurants,
+        warnings=warnings,
+    )
+
+
+def enrich_menu_semantics(
+    candidates: CandidateMenuSetV1,
+    *,
+    candidate_menu_set_id: str,
+) -> NormalizedMenuSetV1:
+    """Use reviewed cached semantics; never synthesize missing hard facts.
+
+    Every fixture item already contains provenance-bearing normalized fields.
+    A live enrichment agent may populate a future cache, but this stage accepts a
+    cache hit only when original text and provenance hashes are present.
+    """
+
+    cache_hits = 0
+    warnings = list(candidates.warnings)
+    for restaurant in candidates.restaurants:
+        for item in restaurant.menu_items:
+            sanitize_visible_text(item.original_text)
+            if not item.semantic_provenance.source_content_hash:
+                raise ValueError(f"menu item {item.menu_item_id} lacks semantic provenance")
+            cache_hits += 1
+    return NormalizedMenuSetV1(
+        case_id=candidates.case_id,
+        profile_revision=candidates.profile_revision,
+        candidate_menu_set_id=candidate_menu_set_id,
+        restaurants=candidates.restaurants,
+        cache_hits=cache_hits,
+        model_enrichments=0,
+        warnings=warnings,
+    )
+
+
+def _requirement_passes(item: MenuItemV1, kind: HardRequirementKind, namespace: SemanticNamespace, code: str) -> bool:
+    if kind is HardRequirementKind.ALLERGY or namespace is SemanticNamespace.ALLERGEN:
+        return code in item.verified_free_allergens
+    if kind is HardRequirementKind.DIET or namespace is SemanticNamespace.DIET:
+        if code == "vegetarian":
+            return item.vegetarian_status is VegetarianStatus.EXPLICIT_YES
+        return False
+    if kind is HardRequirementKind.SPICE_LIMIT or namespace is SemanticNamespace.SPICE:
+        if code in {"hot", "spicy"}:
+            return item.spice_level not in {SpiceLevel.HOT, SpiceLevel.UNKNOWN}
+        return False
+    if kind is HardRequirementKind.FOOD_EXCLUSION:
+        explicit_terms = {
+            item.category_code,
+            *item.allergen_tags,
+            *item.inferred_tags,
+        }
+        return code not in explicit_terms
+    # Unsupported/unknown hard semantics are conservative exclusions.
+    return False
+
+
+def _preference_matches(item: MenuItemV1, namespace: SemanticNamespace, code: str) -> bool:
+    if namespace is SemanticNamespace.SPICE:
+        return item.spice_level.value == code or (code == "spicy" and item.spice_level is SpiceLevel.HOT)
+    if namespace is SemanticNamespace.FOOD_CATEGORY:
+        return item.category_code == code
+    return code in item.inferred_tags or code in item.allergen_tags
+
+
+def apply_hard_eligibility(
+    intake: PlanningIntakeV2,
+    normalized: NormalizedMenuSetV1,
+    *,
+    normalized_menu_set_id: str,
+) -> EligibleMenuSetV1:
+    """Apply allergy/diet constraints using verified structured facts only."""
+
+    all_group_ids = [group.group_id for group in intake.profile.party.groups]
+    strength_penalty = {
+        PreferenceStrength.WEAK: 750,
+        PreferenceStrength.NORMAL: 1_500,
+        PreferenceStrength.STRONG: 2_500,
+    }
+    restaurants: list[EligibleRestaurantV1] = []
+    excluded_count = 0
+    warnings = list(normalized.warnings)
+
+    for restaurant in normalized.restaurants:
+        eligibility_rows: list[MenuEligibilityV1] = []
+        for item in restaurant.menu_items:
+            excluded_groups: set[str] = set()
+            reasons: list[str] = []
+            for requirement in intake.profile.hard_requirements:
+                for term in requirement.terms:
+                    if not _requirement_passes(item, requirement.kind, term.namespace, term.code):
+                        excluded_groups.update(requirement.affected_group_ids)
+                        reasons.append(
+                            f"{requirement.requirement_id}: no verified {term.code} eligibility evidence"
+                        )
+            penalty = 0
+            for preference in intake.profile.preferences:
+                affected = set(preference.affected_group_ids) or set(all_group_ids)
+                if affected.isdisjoint(set(all_group_ids) - excluded_groups):
+                    continue
+                matches = any(
+                    _preference_matches(item, term.namespace, term.code)
+                    for term in preference.terms
+                )
+                if preference.polarity is PreferencePolarity.AVOID and matches:
+                    penalty += strength_penalty[preference.strength]
+                elif preference.polarity is PreferencePolarity.PREFER and not matches:
+                    penalty += strength_penalty[preference.strength] // 2
+            eligible_groups = [group_id for group_id in all_group_ids if group_id not in excluded_groups]
+            if not eligible_groups:
+                excluded_count += 1
+            eligibility_rows.append(
+                MenuEligibilityV1(
+                    menu_item_id=item.menu_item_id,
+                    eligible_group_ids=eligible_groups,
+                    excluded_group_ids=sorted(excluded_groups),
+                    hard_exclusion_reasons=sorted(set(reasons)),
+                    preference_penalty_basis_points=min(10_000, penalty),
+                )
+            )
+        restaurants.append(
+            EligibleRestaurantV1(restaurant=restaurant, eligibility=eligibility_rows)
+        )
+
+    return EligibleMenuSetV1(
+        case_id=intake.case_id,
+        profile_revision=intake.profile_revision,
+        normalized_menu_set_id=normalized_menu_set_id,
+        restaurants=restaurants,
+        excluded_item_count=excluded_count,
+        warnings=warnings,
+    )
