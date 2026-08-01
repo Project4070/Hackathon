@@ -13,11 +13,17 @@ from group_food_agent.restaurant import (
     load_restaurant_source,
     sanitize_visible_text,
     search_menu_candidates,
+    validate_live_restaurant_source,
 )
 from group_food_agent.serving import build_serving_input, calculate_serving_requirement
 from group_food_agent.planning import pizza_area_scaled_servings
 from group_food_agent.validation import ValidationContextV2, validate_planning_profile
-from group_food_agent.contracts import LocationRequirementV2, LocationSource
+from group_food_agent.contracts import (
+    LocationRequirementV2,
+    LocationSource,
+    SemanticNamespace,
+    SemanticTermV2,
+)
 
 
 def _intake(candidate, raw):
@@ -160,3 +166,76 @@ def test_delivery_area_does_not_filter_direct_source(
         "requested category and delivery location did not filter" in warning
         for warning in candidates.warnings
     )
+
+
+def test_live_scope_filters_to_requested_location_and_category(
+    canonical_candidate, canonical_raw_text
+):
+    intake = _intake(canonical_candidate, canonical_raw_text)
+    shrimp = SemanticTermV2(
+        namespace=SemanticNamespace.FOOD_CATEGORY,
+        code="shrimp",
+        label="shrimp",
+    )
+    profile = intake.profile.model_copy(
+        update={
+            "location_requirement": LocationRequirementV2(
+                delivery_required=True,
+                source=LocationSource.USER_TEXT,
+                query="신논현역",
+                latitude=None,
+                longitude=None,
+            ),
+            "food_scope": intake.profile.food_scope.model_copy(
+                update={"requested_categories": [shrimp]}
+            ),
+        }
+    )
+
+    candidates = search_menu_candidates(
+        intake.model_copy(update={"profile": profile}),
+        load_restaurant_source(),
+        now=datetime(2026, 8, 2, tzinfo=timezone.utc),
+        restaurant_limit=10,
+        enforce_request_scope=True,
+    )
+
+    assert [restaurant.branch for restaurant in candidates.restaurants] == [
+        "Shinnonhyeon Station"
+    ]
+    assert {
+        item.category_code
+        for restaurant in candidates.restaurants
+        for item in restaurant.menu_items
+    } == {"shrimp"}
+
+
+def test_live_scope_fails_closed_when_location_has_no_match(
+    canonical_candidate, canonical_raw_text
+):
+    intake = _intake(canonical_candidate, canonical_raw_text)
+    profile = intake.profile.model_copy(
+        update={
+            "location_requirement": LocationRequirementV2(
+                delivery_required=True,
+                source=LocationSource.USER_TEXT,
+                query="Busan Haeundae",
+                latitude=None,
+                longitude=None,
+            )
+        }
+    )
+
+    with pytest.raises(LookupError, match="requested location and food scope"):
+        search_menu_candidates(
+            intake.model_copy(update={"profile": profile}),
+            load_restaurant_source(),
+            now=datetime(2026, 8, 2, tzinfo=timezone.utc),
+            restaurant_limit=10,
+            enforce_request_scope=True,
+        )
+
+
+def test_live_source_policy_rejects_bundled_simulated_fixture():
+    with pytest.raises(ValueError, match="data_mode=crawler_live"):
+        validate_live_restaurant_source(load_restaurant_source())

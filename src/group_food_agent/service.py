@@ -43,7 +43,9 @@ from .restaurant import (
     apply_hard_eligibility,
     enrich_menu_semantics,
     load_restaurant_source,
+    load_live_restaurant_source,
     search_menu_candidates,
+    validate_live_restaurant_source,
 )
 from .serving import build_serving_input, calculate_serving_requirement
 from .stores import (
@@ -76,6 +78,7 @@ class PlanningService:
         clock: Clock = system_clock,
         restaurant_source: RestaurantSourceV1 | None = None,
         load_default_source: bool = True,
+        source_policy: str = "demo",
         trace_writer: JsonlTraceWriter | None = None,
         initial_existing_food_credits: dict[str, int] | None = None,
         initial_demand_multipliers: dict[str, int] | None = None,
@@ -83,9 +86,19 @@ class PlanningService:
         self.clock = clock
         self.artifacts = ArtifactStore(clock)
         self.cases = PlanningCaseStore()
-        self.restaurant_source = restaurant_source or (
-            load_restaurant_source() if load_default_source else None
-        )
+        if source_policy not in {"demo", "live"}:
+            raise ValueError("source_policy must be demo or live")
+        self.source_policy = source_policy
+        if source_policy == "live":
+            self.restaurant_source = (
+                validate_live_restaurant_source(restaurant_source)
+                if restaurant_source is not None
+                else load_live_restaurant_source()
+            )
+        else:
+            self.restaurant_source = restaurant_source or (
+                load_restaurant_source() if load_default_source else None
+            )
         self.evidence = EvidenceStore()
         self.policies = PolicyRegistry()
         self.events = ToolEventStore()
@@ -322,6 +335,7 @@ class PlanningService:
                 restaurant_limit=job.runtime_policy.restaurant_search.restaurant_limit,
                 unavailable_restaurant_ids=state.unavailable_restaurant_ids,
                 unavailable_menu_item_ids=state.unavailable_menu_item_ids,
+                enforce_request_scope=self.source_policy == "live",
             )
 
         return self._run_stage(
@@ -511,9 +525,18 @@ class PlanningService:
 
     def _failure(self, case_id: str, status: str, reason: str) -> PlanRunResult:
         state = self.cases.get(case_id)
-        corrective_action = (
-            "Provide source-backed restaurant, menu, price, and practical-serving data for the requested category and location."
-        )
+        if status == "data_unavailable":
+            reason = (
+                "요청 위치와 음식 조건에 맞는 검증된 실제 식당 데이터가 없습니다. "
+                f"세부 원인: {reason}"
+            )
+            corrective_action = (
+                "해당 위치의 실제 식당·메뉴·가격·제공량 근거가 포함된 crawler_live 소스를 연결한 뒤 다시 실행해 주세요."
+            )
+        else:
+            corrective_action = (
+                "Provide source-backed restaurant, menu, price, and practical-serving data for the requested category and location."
+            )
         failure = PlanningFailureV1(
             case_id=case_id,
             profile_revision=state.job.intake.profile_revision,

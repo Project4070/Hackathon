@@ -428,7 +428,26 @@ def merge_multimodal_candidate(
         if evidence.field_path == "/party/total_count"
         or evidence.field_path.startswith("/party/total_count/")
     ]
-    if accepted_total is not None and not total_evidence:
+    valid_total_evidence = [
+        evidence
+        for evidence in total_evidence
+        if evidence.source_text is None
+        or (raw_notes is not None and evidence.source_text in raw_notes)
+    ]
+    invalid_total_evidence_ids = {
+        evidence.evidence_id
+        for evidence in total_evidence
+        if evidence not in valid_total_evidence
+    }
+    if invalid_total_evidence_ids:
+        candidate = candidate.model_copy(update={
+            "evidence": [
+                evidence
+                for evidence in candidate.evidence
+                if evidence.evidence_id not in invalid_total_evidence_ids
+            ]
+        })
+    if accepted_total is not None and not valid_total_evidence:
         source_text = declared_source
         evidence_ids = {evidence.evidence_id for evidence in candidate.evidence}
         evidence_id = "evidence_scene_total"
@@ -469,10 +488,15 @@ def merge_multimodal_candidate(
     return candidate.model_copy(update={"location_hint": location, "unresolved_issues": issues})
 
 
-def calculate_existing_food_credit(scene: SceneAnalysisV1) -> ExistingFoodCreditV1:
+def calculate_existing_food_credit(
+    scene: SceneAnalysisV1,
+    *,
+    restaurant_source=None,
+    load_default_source: bool = True,
+) -> ExistingFoodCreditV1:
     """Credit only conservative lower bounds backed by reviewed source records."""
 
-    source = load_restaurant_source()
+    source = restaurant_source or (load_restaurant_source() if load_default_source else None)
     rows: list[ExistingFoodCreditLineV1] = []
     warnings: list[str] = []
     total = 0
@@ -486,7 +510,7 @@ def calculate_existing_food_credit(scene: SceneAnalysisV1) -> ExistingFoodCredit
         explicit_text = observation.evidence.modality == "user_text" and observation.evidence.status == "explicit"
         references = [
             item
-            for restaurant in source.restaurants
+            for restaurant in (source.restaurants if source is not None else [])
             for item in restaurant.menu_items
             if item.category_code == observation.category_code
             and observation.unit.casefold() in compatible_units.get(observation.category_code, {item.sale_unit.casefold()})

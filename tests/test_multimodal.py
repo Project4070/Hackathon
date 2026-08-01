@@ -251,6 +251,53 @@ def test_explicit_total_bridge_uses_only_verbatim_user_evidence(canonical_candid
     assert notes[total_evidence.start_offset:total_evidence.end_offset] == total_evidence.source_text
 
 
+def test_nonverbatim_model_total_evidence_is_replaced_before_normalization(canonical_candidate):
+    invalid_total_evidence = next(
+        evidence
+        for evidence in canonical_candidate.evidence
+        if evidence.field_path == "/party/total_count"
+    ).model_copy(update={
+        "source_text": "사진에서 15명을 확인함",
+        "start_offset": None,
+        "end_offset": None,
+    })
+    candidate = canonical_candidate.model_copy(update={
+        "evidence": [
+            invalid_total_evidence
+            if evidence.field_path == "/party/total_count"
+            else evidence
+            for evidence in canonical_candidate.evidence
+        ]
+    })
+    scene = _scene(_food()).model_copy(update={
+        "visible_people": 15,
+        "additional_people": 0,
+        "explicit_total_people": None,
+    })
+    interpreted = MultimodalMealRequestCandidateV1(
+        request_candidate=candidate,
+        scene_analysis=scene,
+        conflict_resolutions=[],
+    )
+    context = MultimodalContextV1(
+        captured_at=datetime.now(UTC),
+        timezone_offset_minutes=540,
+        location_permission="unavailable",
+    )
+
+    merged = merge_multimodal_candidate(interpreted, context, raw_notes="채식 한 명이 있습니다")
+    normalized = normalize_candidate_for_validation(merged, "채식 한 명이 있습니다")
+    total_evidence = [
+        evidence for evidence in normalized.evidence if evidence.field_path == "/party/total_count"
+    ]
+
+    assert len(total_evidence) == 1
+    assert total_evidence[0].evidence_id == "evidence_scene_total"
+    assert total_evidence[0].status == "inferred"
+    assert total_evidence[0].source_text is None
+    assert total_evidence[0].confidence == 0.95
+
+
 def test_unusable_photo_defaults_model_invented_appetite_and_asks_only_for_count(
     canonical_candidate,
     canonical_raw_text,
@@ -334,6 +381,18 @@ def test_offline_web_run_exposes_scene_trace_and_sanitized_path():
     assert payload["context_used"]["history"]["data_mode"] == "seeded_demo_history"
     assert payload["pipeline_events"][0]["stage"] == "multimodal_interpreter"
     assert "\\" not in payload["trace"]["local_trace_file"]
+
+
+def test_live_existing_food_credit_has_no_demo_source_fallback():
+    credit = calculate_existing_food_credit(
+        _scene(_food()),
+        restaurant_source=None,
+        load_default_source=False,
+    )
+
+    assert credit.total_credited_servings_milli == 0
+    assert credit.lines[0].accepted is False
+    assert "no reviewed category/unit serving reference" in credit.lines[0].reason
 
 
 def test_web_rejects_empty_live_request():

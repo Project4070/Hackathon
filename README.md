@@ -137,11 +137,19 @@ python -m pip check
 Important fixtures:
 
 - `fixtures/canonical_planning_job_v2.json`: golden validated 15-person job.
-- `fixtures/restaurant_source_v1.json`: four reviewed direct-source
-  restaurant branches, including the bounded 신논현 shrimp regression source,
-  with explicit dietary/allergen evidence and practical serving ranges.
+- `fixtures/restaurant_source_v1.json`: four reviewed, synthetic restaurant
+  branches, including the bounded 신논현 shrimp regression source, with
+  explicit dietary/allergen evidence and practical serving ranges. It is used
+  only by the clearly labeled prepared-demo flow; live runs never load it.
 - `fixtures/policies/serving_policy_kr_v1.json`: versioned Decimal-compatible
   appetite, context, cap, and safety-margin policy.
+
+Live restaurant data must be an explicitly configured `RestaurantSourceV1`
+snapshot with `data_mode: "crawler_live"`. Point
+`GROUP_FOOD_LIVE_RESTAURANT_SOURCE` at that JSON file before starting
+`group-food-web`. If the variable is absent, the source is synthetic, or no
+restaurant matches the requested location and food scope, live planning returns
+`data_unavailable` and does not substitute a demo restaurant.
 
 The bounded crawler, semantic-enrichment agent, direct restaurant source, stores, calculator,
 replanning, feedback, end-to-end application entry point, and adversarial tests

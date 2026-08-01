@@ -33,6 +33,7 @@ from .multimodal import (
     seeded_demo_history,
 )
 from .run_payload import build_run_payload
+from .restaurant import load_live_restaurant_source, load_restaurant_source
 from .service import PlanningService
 from .validation import ValidationContextV2
 
@@ -282,8 +283,17 @@ async def _execute(data: dict[str, Any]) -> dict[str, Any]:
             ],
         }))
 
+    planning_source = (
+        load_restaurant_source()
+        if run_mode == "offline_canonical"
+        else load_live_restaurant_source()
+    )
     if scene is not None:
-        credit = calculate_existing_food_credit(scene)
+        credit = calculate_existing_food_credit(
+            scene,
+            restaurant_source=planning_source,
+            load_default_source=False,
+        )
         multimodal_events.append(_event("stage_completed", "existing_food_normalization", case_id, {
             "credited_servings_milli": credit.total_credited_servings_milli,
             "protected_demand_credit_milli": 0,
@@ -291,6 +301,9 @@ async def _execute(data: dict[str, Any]) -> dict[str, Any]:
         }))
 
     service = PlanningService(
+        restaurant_source=planning_source,
+        load_default_source=False,
+        source_policy="demo" if run_mode == "offline_canonical" else "live",
         initial_existing_food_credits={
             case_id: credit.total_credited_servings_milli if credit else 0
         },

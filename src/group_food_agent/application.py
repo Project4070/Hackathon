@@ -193,7 +193,14 @@ async def run_group_food_agent(
                 local_trace_file=str(trace_writer.path) if trace_writer is not None else None,
             )
 
-        planner = service or PlanningService(trace_writer=trace_writer)
+        planner = service or PlanningService(
+            trace_writer=trace_writer,
+            source_policy="live" if live_planner else "demo",
+        )
+        if live_planner and planner.source_policy != "live":
+            raise RuntimeError(
+                "live planner requires source_policy=live; demo restaurant data is forbidden"
+            )
         if service is not None and trace_writer is not None:
             planner.attach_trace_writer(trace_writer)
         job = job_from_intake(
@@ -202,7 +209,12 @@ async def run_group_food_agent(
             trace_id=correlation.logical_trace_id,
         )
         planner.create_case(job)
-        if live_planner:
+        if live_planner and planner.restaurant_source is None:
+            # Do not spend a planner-model call—or fall back to demo data—when
+            # there is no source-backed live restaurant snapshot to plan from.
+            result = planner.plan_case(boundary.case_id)
+            mode = "live_source_unavailable"
+        elif live_planner:
             result = await run_agent_plan(
                 planner,
                 boundary.case_id,

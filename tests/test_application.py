@@ -107,6 +107,30 @@ async def test_deterministic_gateway_block_is_printable_and_structured(
 
 
 @pytest.mark.asyncio
+async def test_live_run_never_falls_back_to_simulated_restaurants(
+    canonical_candidate, canonical_raw_text, monkeypatch
+):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key-not-used")
+    monkeypatch.delenv("GROUP_FOOD_LIVE_RESTAURANT_SOURCE", raising=False)
+    service = PlanningService(source_policy="live")
+
+    run = await run_group_food_agent(
+        canonical_raw_text,
+        ValidationContextV2(request_id="request-live-source", case_id="case-live-source"),
+        interpreter=FixedInterpreter(canonical_candidate),
+        service=service,
+        live_planner=True,
+    )
+
+    assert service.restaurant_source is None
+    assert run.mode == "live_source_unavailable"
+    assert run.plan_result is not None and run.plan_result.failure is not None
+    assert run.plan_result.failure.status == "data_unavailable"
+    assert run.plan_result.display is None
+    assert all("Alpha Chicken" not in event.summary for event in run.tool_events)
+
+
+@pytest.mark.asyncio
 async def test_boundary_diagnostics_preserve_validation_reason_and_stage(
     canonical_candidate, canonical_raw_text
 ):

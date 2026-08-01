@@ -439,6 +439,7 @@ Unless the project owner explicitly changes scope, do not spend hackathon time o
 - Keep secrets and provider credentials out of source control.
 - Call out assumptions and simulated data in documentation and user-facing output.
 - Call out direct source, timestamp, completeness, and inferred fields in documentation and user-facing output.
+- Never use the bundled simulated restaurant fixture in live mode. Live planning must use an explicitly configured `crawler_live` source filtered to the requested location; if none is available or no location match exists, return `data_unavailable` instead of a restaurant recommendation. The simulated fixture is restricted to the clearly labeled prepared-demo mode.
 - Prefer small, replaceable components that can be implemented, tested, and rehearsed within the remaining time.
 - Test the happy path, a dietary-constraint conflict, restaurant-specific quantity differences, and at least one replanning event.
 - Test source normalization, branch deduplication, partial extraction, selector failure, timeout, and direct-source-unavailable behavior with saved fixtures.
